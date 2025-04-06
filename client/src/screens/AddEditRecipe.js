@@ -18,6 +18,27 @@ import axios from 'axios';
 
 const difficultyLevels = ['Easy', 'Medium', 'Hard'];
 
+const cuisineTypes = [
+  'African',
+  'American',
+  'Brazilian',
+  'British',
+  'Caribbean',
+  'Chinese',
+  'French',
+  'Greek',
+  'Indian',
+  'Italian',
+  'Japanese',
+  'Korean',
+  'Mediterranean',
+  'Mexican',
+  'Middle Eastern',
+  'Spanish',
+  'Thai',
+  'Vietnamese'
+];
+
 const AddEditRecipe = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -169,6 +190,7 @@ const AddEditRecipe = () => {
             <TextField
               margin="normal"
               required
+              select
               fullWidth
               label="Cuisine"
               name="cuisine"
@@ -176,7 +198,13 @@ const AddEditRecipe = () => {
               onChange={handleChange}
               error={!!formErrors.cuisine}
               helperText={formErrors.cuisine}
-            />
+            >
+              {cuisineTypes.map((cuisine) => (
+                <MenuItem key={cuisine} value={cuisine}>
+                  {cuisine}
+                </MenuItem>
+              ))}
+            </TextField>
             <TextField
               margin="normal"
               required
