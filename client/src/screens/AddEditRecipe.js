@@ -9,14 +9,22 @@ import {
   Box,
   Rating,
   CircularProgress,
+  MenuItem,
+  Snackbar,
+  Alert,
 } from '@mui/material';
+import { ArrowBack, Save } from '@mui/icons-material';
 import axios from 'axios';
+
+const difficultyLevels = ['Easy', 'Medium', 'Hard', 'Expert'];
 
 const AddEditRecipe = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(id ? true : false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [formErrors, setFormErrors] = useState({});
   const [recipe, setRecipe] = useState({
     recipeName: '',
     cuisine: '',
@@ -50,6 +58,21 @@ const AddEditRecipe = () => {
     }
   };
 
+  const validateForm = () => {
+    const errors = {};
+    if (!recipe.recipeName) errors.recipeName = 'Recipe name is required';
+    if (!recipe.cuisine) errors.cuisine = 'Cuisine is required';
+    if (!recipe.ingredients) errors.ingredients = 'Ingredients are required';
+    if (!recipe.instructions) errors.instructions = 'Instructions are required';
+    if (!recipe.prepTime) errors.prepTime = 'Prep time is required';
+    if (!recipe.cookTime) errors.cookTime = 'Cook time is required';
+    if (!recipe.totalTime) errors.totalTime = 'Total time is required';
+    if (!recipe.servings) errors.servings = 'Number of servings is required';
+    if (!recipe.difficulty) errors.difficulty = 'Difficulty level is required';
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setRecipe(prev => ({
@@ -57,6 +80,19 @@ const AddEditRecipe = () => {
       [name]: value
     }));
   };
+
+  const calculateTotalTime = () => {
+    const prepTime = parseInt(recipe.prepTime) || 0;
+    const cookTime = parseInt(recipe.cookTime) || 0;
+    setRecipe(prev => ({
+      ...prev,
+      totalTime: `${prepTime + cookTime}`
+    }));
+  };
+
+  useEffect(() => {
+    calculateTotalTime();
+  }, [recipe.prepTime, recipe.cookTime]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -71,7 +107,10 @@ const AddEditRecipe = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
-      navigate('/recipes');
+      setSuccessMessage(id ? 'Recipe updated successfully!' : 'Recipe added successfully!');
+      setTimeout(() => {
+        navigate('/recipes');
+      }, 1500);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save recipe');
     }
@@ -106,6 +145,8 @@ const AddEditRecipe = () => {
               name="recipeName"
               value={recipe.recipeName}
               onChange={handleChange}
+              error={!!formErrors.recipeName}
+              helperText={formErrors.recipeName}
             />
             <TextField
               margin="normal"
@@ -115,6 +156,8 @@ const AddEditRecipe = () => {
               name="cuisine"
               value={recipe.cuisine}
               onChange={handleChange}
+              error={!!formErrors.cuisine}
+              helperText={formErrors.cuisine}
             />
             <TextField
               margin="normal"
@@ -122,10 +165,13 @@ const AddEditRecipe = () => {
               fullWidth
               multiline
               rows={4}
-              label="Ingredients"
+              label="Ingredients (one per line)"
               name="ingredients"
               value={recipe.ingredients}
               onChange={handleChange}
+              error={!!formErrors.ingredients}
+              helperText={formErrors.ingredients}
+              placeholder="1 cup flour\n2 eggs\n1/2 cup sugar"
             />
             <TextField
               margin="normal"
@@ -133,32 +179,42 @@ const AddEditRecipe = () => {
               fullWidth
               multiline
               rows={4}
-              label="Instructions"
+              label="Instructions (numbered steps)"
               name="instructions"
               value={recipe.instructions}
               onChange={handleChange}
+              error={!!formErrors.instructions}
+              helperText={formErrors.instructions}
+              placeholder="1. Preheat oven to 350°F\n2. Mix ingredients\n3. Bake for 30 minutes"
             />
             <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
               <TextField
                 required
-                label="Prep Time"
+                label="Prep Time (minutes)"
                 name="prepTime"
+                type="number"
                 value={recipe.prepTime}
                 onChange={handleChange}
+                error={!!formErrors.prepTime}
+                helperText={formErrors.prepTime}
+                inputProps={{ min: 0 }}
               />
               <TextField
                 required
-                label="Cook Time"
+                label="Cook Time (minutes)"
                 name="cookTime"
+                type="number"
                 value={recipe.cookTime}
                 onChange={handleChange}
+                error={!!formErrors.cookTime}
+                helperText={formErrors.cookTime}
+                inputProps={{ min: 0 }}
               />
               <TextField
-                required
-                label="Total Time"
+                label="Total Time (minutes)"
                 name="totalTime"
                 value={recipe.totalTime}
-                onChange={handleChange}
+                disabled
               />
             </Box>
             <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
@@ -169,14 +225,27 @@ const AddEditRecipe = () => {
                 type="number"
                 value={recipe.servings}
                 onChange={handleChange}
+                error={!!formErrors.servings}
+                helperText={formErrors.servings}
+                inputProps={{ min: 1 }}
               />
               <TextField
                 required
+                select
                 label="Difficulty"
                 name="difficulty"
                 value={recipe.difficulty}
                 onChange={handleChange}
-              />
+                error={!!formErrors.difficulty}
+                helperText={formErrors.difficulty}
+                sx={{ minWidth: 120 }}
+              >
+                {difficultyLevels.map((level) => (
+                  <MenuItem key={level} value={level}>
+                    {level}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Box>
             <Box sx={{ mt: 2 }}>
               <Typography component="legend">Rating</Typography>
@@ -193,24 +262,36 @@ const AddEditRecipe = () => {
             </Box>
             <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
               <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                color="primary"
-              >
-                {id ? 'Update Recipe' : 'Add Recipe'}
-              </Button>
-              <Button
-                fullWidth
                 variant="outlined"
-                onClick={() => navigate('/recipes')}
+                onClick={handleCancel}
+                startIcon={<ArrowBack />}
+                sx={{ flex: 1 }}
               >
                 Cancel
               </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                startIcon={<Save />}
+                sx={{ flex: 1 }}
+              >
+                {id ? 'Save Changes' : 'Add Recipe'}
+              </Button>
+
             </Box>
           </form>
         </Paper>
       </Box>
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={2000}
+        onClose={() => setSuccessMessage('')}
+      >
+        <Alert severity="success" sx={{ width: '100%' }}>
+          {successMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
