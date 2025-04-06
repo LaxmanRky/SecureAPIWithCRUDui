@@ -8,7 +8,7 @@
 const mongoose = require("mongoose");
 
 const recipeSchema = new mongoose.Schema({
-  title: {
+  recipeName: {
     type: String,
     required: true,
     trim: true
@@ -22,23 +22,12 @@ const recipeSchema = new mongoose.Schema({
     required: true
   }],
   instructions: [{
-    type: String,
-    required: true
+    type: String
   }],
-  prepTime: {
+  cookingTime: {
     type: Number,
     required: true,
     min: 0
-  },
-  cookTime: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  servings: {
-    type: Number,
-    required: true,
-    min: 1
   },
   difficulty: {
     type: String,
@@ -48,6 +37,16 @@ const recipeSchema = new mongoose.Schema({
   cuisine: {
     type: String,
     required: true
+  },
+  photoLink: {
+    type: String,
+    required: true
+  },
+  averageRating: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5
   }
 }, {
   timestamps: true
