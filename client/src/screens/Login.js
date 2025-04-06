@@ -7,24 +7,65 @@ import {
   Button,
   Typography,
   Box,
+  Alert,
+  Snackbar,
 } from '@mui/material';
+import { Login as LoginIcon, PersonAdd } from '@mui/icons-material';
 import axios from 'axios';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [formErrors, setFormErrors] = useState({});
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
+
+  const validateForm = () => {
+    const errors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.email) errors.email = 'Email is required';
+    else if (!emailRegex.test(formData.email)) errors.email = 'Invalid email format';
+    if (!formData.password) errors.password = 'Password is required';
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+    // Clear general error message
+    if (error) setError('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     try {
       const response = await axios.post('http://localhost:5000/api/auth/login', {
-        email,
-        password,
+        email: formData.email,
+        password: formData.password,
       });
+      setSuccessMessage('Login successful! Redirecting...');
       localStorage.setItem('token', response.data.token);
-      navigate('/recipes');
+      setTimeout(() => {
+        navigate('/recipes');
+      }, 1500);
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred');
     }
@@ -55,36 +96,63 @@ const Login = () => {
               required
               fullWidth
               label="Email Address"
+              name="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={handleChange}
+              error={!!formErrors.email}
+              helperText={formErrors.email}
+              autoComplete="email"
             />
             <TextField
               margin="normal"
               required
               fullWidth
               label="Password"
+              name="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.password}
+              onChange={handleChange}
+              error={!!formErrors.password}
+              helperText={formErrors.password}
+              autoComplete="current-password"
             />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              Sign In
-            </Button>
-            <Typography align="center">
+            <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+              <Button
+                type="submit"
+                variant="contained"
+                startIcon={<LoginIcon />}
+                sx={{ flex: 1 }}
+              >
+                Sign In
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<PersonAdd />}
+                onClick={() => navigate('/register')}
+                sx={{ flex: 1 }}
+              >
+                Register
+              </Button>
+            </Box>
+            <Typography align="center" sx={{ mt: 2 }}>
               Don't have an account?{' '}
               <Link to="/register" style={{ textDecoration: 'none' }}>
-                Register
+                Register here
               </Link>
             </Typography>
           </form>
         </Paper>
       </Box>
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={2000}
+        onClose={() => setSuccessMessage('')}
+      >
+        <Alert severity="success" sx={{ width: '100%' }}>
+          {successMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
