@@ -16,10 +16,10 @@ const {
 } = require("../controllers/recipeController");
 
 // Recipe routes
-router.get("/", getAllRecipes);
-router.get("/:id", getRecipeById);
-router.post("/", createRecipe);
-router.put("/:id", updateRecipe);
-router.delete("/:id", deleteRecipe);
+router.get("/getAllRecipes", getAllRecipes);
+router.get("/getAllRecipes/:id", getRecipeById);
+router.post("/createRecipe", createRecipe);
+router.put("/updateRecipe/:id", updateRecipe);
+router.delete("/deleteRecipe/:id", deleteRecipe);
 
 module.exports = router;
