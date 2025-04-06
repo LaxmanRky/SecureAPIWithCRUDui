@@ -16,7 +16,7 @@ import {
 import { ArrowBack, Save } from '@mui/icons-material';
 import axios from 'axios';
 
-const difficultyLevels = ['Easy', 'Medium', 'Hard', 'Expert'];
+const difficultyLevels = ['Easy', 'Medium', 'Hard'];
 
 const AddEditRecipe = () => {
   const { id } = useParams();
@@ -27,14 +27,13 @@ const AddEditRecipe = () => {
   const [formErrors, setFormErrors] = useState({});
   const [recipe, setRecipe] = useState({
     recipeName: '',
-    cuisine: '',
-    ingredients: '',
-    instructions: '',
-    prepTime: '',
-    cookTime: '',
-    totalTime: '',
-    servings: '',
+    description: '',
+    ingredients: [],
+    instructions: [],
+    cookingTime: '',
     difficulty: '',
+    cuisine: '',
+    photoLink: '',
     averageRating: 0,
   });
 
@@ -61,38 +60,34 @@ const AddEditRecipe = () => {
   const validateForm = () => {
     const errors = {};
     if (!recipe.recipeName) errors.recipeName = 'Recipe name is required';
-    if (!recipe.cuisine) errors.cuisine = 'Cuisine is required';
-    if (!recipe.ingredients) errors.ingredients = 'Ingredients are required';
-    if (!recipe.instructions) errors.instructions = 'Instructions are required';
-    if (!recipe.prepTime) errors.prepTime = 'Prep time is required';
-    if (!recipe.cookTime) errors.cookTime = 'Cook time is required';
-    if (!recipe.totalTime) errors.totalTime = 'Total time is required';
-    if (!recipe.servings) errors.servings = 'Number of servings is required';
+    if (!recipe.description) errors.description = 'Description is required';
+    if (!recipe.ingredients || recipe.ingredients.length === 0) errors.ingredients = 'At least one ingredient is required';
+    if (!recipe.cookingTime) errors.cookingTime = 'Cooking time is required';
     if (!recipe.difficulty) errors.difficulty = 'Difficulty level is required';
+    if (!recipe.cuisine) errors.cuisine = 'Cuisine is required';
+    if (!recipe.photoLink) errors.photoLink = 'Photo link is required';
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setRecipe(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    if (name === 'ingredients' || name === 'instructions') {
+      // Split text by new lines and filter out empty lines
+      const items = value.split('\n').filter(item => item.trim() !== '');
+      setRecipe(prev => ({
+        ...prev,
+        [name]: items
+      }));
+    } else {
+      setRecipe(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
-  const calculateTotalTime = () => {
-    const prepTime = parseInt(recipe.prepTime) || 0;
-    const cookTime = parseInt(recipe.cookTime) || 0;
-    setRecipe(prev => ({
-      ...prev,
-      totalTime: `${prepTime + cookTime}`
-    }));
-  };
 
-  useEffect(() => {
-    calculateTotalTime();
-  }, [recipe.prepTime, recipe.cookTime]);
 
   const handleCancel = () => {
     if (window.confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
@@ -162,6 +157,19 @@ const AddEditRecipe = () => {
               margin="normal"
               required
               fullWidth
+              multiline
+              rows={2}
+              label="Description"
+              name="description"
+              value={recipe.description}
+              onChange={handleChange}
+              error={!!formErrors.description}
+              helperText={formErrors.description}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
               label="Cuisine"
               name="cuisine"
               value={recipe.cuisine}
@@ -177,7 +185,7 @@ const AddEditRecipe = () => {
               rows={4}
               label="Ingredients (one per line)"
               name="ingredients"
-              value={recipe.ingredients}
+              value={recipe.ingredients.join('\n')}
               onChange={handleChange}
               error={!!formErrors.ingredients}
               helperText={formErrors.ingredients}
@@ -191,7 +199,7 @@ const AddEditRecipe = () => {
               rows={4}
               label="Instructions (numbered steps)"
               name="instructions"
-              value={recipe.instructions}
+              value={recipe.instructions.join('\n')}
               onChange={handleChange}
               error={!!formErrors.instructions}
               helperText={formErrors.instructions}
@@ -200,44 +208,26 @@ const AddEditRecipe = () => {
             <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
               <TextField
                 required
-                label="Prep Time (minutes)"
-                name="prepTime"
+                label="Cooking Time (minutes)"
+                name="cookingTime"
                 type="number"
-                value={recipe.prepTime}
+                value={recipe.cookingTime}
                 onChange={handleChange}
-                error={!!formErrors.prepTime}
-                helperText={formErrors.prepTime}
+                error={!!formErrors.cookingTime}
+                helperText={formErrors.cookingTime}
                 inputProps={{ min: 0 }}
+                fullWidth
               />
               <TextField
                 required
-                label="Cook Time (minutes)"
-                name="cookTime"
-                type="number"
-                value={recipe.cookTime}
+                fullWidth
+                label="Photo Link"
+                name="photoLink"
+                value={recipe.photoLink}
                 onChange={handleChange}
-                error={!!formErrors.cookTime}
-                helperText={formErrors.cookTime}
-                inputProps={{ min: 0 }}
-              />
-              <TextField
-                label="Total Time (minutes)"
-                name="totalTime"
-                value={recipe.totalTime}
-                disabled
-              />
-            </Box>
-            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-              <TextField
-                required
-                label="Servings"
-                name="servings"
-                type="number"
-                value={recipe.servings}
-                onChange={handleChange}
-                error={!!formErrors.servings}
-                helperText={formErrors.servings}
-                inputProps={{ min: 1 }}
+                error={!!formErrors.photoLink}
+                helperText={formErrors.photoLink}
+                placeholder="https://example.com/photo.jpg"
               />
               <TextField
                 required
