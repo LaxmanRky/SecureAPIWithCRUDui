@@ -26,9 +26,11 @@ mongoose
 
 // Routes
 const recipeRoutes = require("./routes/recipeRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 // Apply routes
 app.use("/api/recipes", recipeRoutes);
+app.use("/api/auth", authRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
