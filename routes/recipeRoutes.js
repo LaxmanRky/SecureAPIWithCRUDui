@@ -7,6 +7,7 @@
 
 const express = require("express");
 const router = express.Router();
+const auth = require("../middleware/auth");
 const {
   getAllRecipes,
   getRecipeById,
@@ -15,11 +16,11 @@ const {
   deleteRecipe
 } = require("../controllers/recipeController");
 
-// Recipe routes
-router.get("/getAllRecipes", getAllRecipes);
-router.get("/getAllRecipes/:id", getRecipeById);
-router.post("/createRecipe", createRecipe);
-router.put("/updateRecipe/:id", updateRecipe);
-router.delete("/deleteRecipe/:id", deleteRecipe);
+// Secured Recipe routes
+router.get("/getAllRecipes", auth, getAllRecipes);
+router.get("/getAllRecipes/:id", auth, getRecipeById);
+router.post("/createRecipe", auth, createRecipe);
+router.put("/updateRecipe/:id", auth, updateRecipe);
+router.delete("/deleteRecipe/:id", auth, deleteRecipe);
 
 module.exports = router;
