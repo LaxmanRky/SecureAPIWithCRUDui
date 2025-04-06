@@ -33,10 +33,7 @@ exports.getRecipeById = async (req, res) => {
 // Create a recipe
 exports.createRecipe = async (req, res) => {
   try {
-    const recipe = new Recipe({
-      ...req.body,
-      createdBy: req.user._id // Add the user ID from the auth middleware
-    });
+    const recipe = new Recipe(req.body);
     await recipe.save();
     res.status(201).json(recipe);
   } catch (error) {
@@ -50,11 +47,6 @@ exports.updateRecipe = async (req, res) => {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) {
       return res.status(404).json({ message: "Recipe not found" });
-    }
-
-    // Check if user owns the recipe
-    if (recipe.createdBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized to update this recipe" });
     }
 
     const updatedRecipe = await Recipe.findByIdAndUpdate(
@@ -74,11 +66,6 @@ exports.deleteRecipe = async (req, res) => {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) {
       return res.status(404).json({ message: "Recipe not found" });
-    }
-
-    // Check if user owns the recipe
-    if (recipe.createdBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized to delete this recipe" });
     }
 
     await Recipe.findByIdAndDelete(req.params.id);

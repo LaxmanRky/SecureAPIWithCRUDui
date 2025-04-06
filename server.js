@@ -25,12 +25,10 @@ mongoose
   .catch((err) => console.error("MongoDB connection error:", err));
 
 // Routes
-const recipeRoutes = require("./src/routes/recipeRoutes");
-const authRoutes = require("./src/routes/authRoutes");
+const recipeRoutes = require("./routes/recipeRoutes");
 
 // Apply routes
 app.use("/api/recipes", recipeRoutes);
-app.use("/api/auth", authRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

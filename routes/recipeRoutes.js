@@ -7,7 +7,6 @@
 
 const express = require("express");
 const router = express.Router();
-const auth = require("../middleware/auth");
 const {
   getAllRecipes,
   getRecipeById,
@@ -16,11 +15,11 @@ const {
   deleteRecipe
 } = require("../controllers/recipeController");
 
-// All routes are protected with JWT auth middleware
-router.get("/", auth, getAllRecipes);
-router.get("/:id", auth, getRecipeById);
-router.post("/", auth, createRecipe);
-router.put("/:id", auth, updateRecipe);
-router.delete("/:id", auth, deleteRecipe);
+// Recipe routes
+router.get("/", getAllRecipes);
+router.get("/:id", getRecipeById);
+router.post("/", createRecipe);
+router.put("/:id", updateRecipe);
+router.delete("/:id", deleteRecipe);
 
 module.exports = router;
