@@ -94,8 +94,18 @@ const AddEditRecipe = () => {
     calculateTotalTime();
   }, [recipe.prepTime, recipe.cookTime]);
 
+  const handleCancel = () => {
+    if (window.confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+      navigate('/recipes');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       if (id) {
