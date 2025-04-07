@@ -1,21 +1,83 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material';
-import './App.css';
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { ThemeProvider, createTheme } from "@mui/material";
+import "./App.css";
 
 // Screens
-import RecipeList from './screens/RecipeList';
-import Login from './screens/Login';
-import Register from './screens/Register';
-import AddEditRecipe from './screens/AddEditRecipe';
+import RecipeList from "./screens/RecipeList";
+import Login from "./screens/Login";
+import Register from "./screens/Register";
+import AddEditRecipe from "./screens/AddEditRecipe";
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',
+      main: "#2196f3",
+      light: "#4dabf5",
+      dark: "#1769aa",
+      contrastText: "#fff",
     },
     secondary: {
-      main: '#dc004e',
+      main: "#f50057",
+      light: "#f73378",
+      dark: "#ab003c",
+      contrastText: "#fff",
+    },
+    background: {
+      default: "#f5f5f5",
+      paper: "#ffffff",
+    },
+  },
+  typography: {
+    fontFamily: '"Segoe UI", "Roboto", "Arial", sans-serif',
+    h4: {
+      fontWeight: 600,
+      letterSpacing: "-0.5px",
+    },
+    button: {
+      textTransform: "none",
+      fontWeight: 500,
+    },
+  },
+  shape: {
+    borderRadius: 8,
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          textTransform: "none",
+          fontSize: "1rem",
+          padding: "8px 24px",
+        },
+        containedPrimary: {
+          "&:hover": {
+            boxShadow: "0 8px 16px 0 rgba(33, 150, 243, 0.3)",
+          },
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          "& .MuiOutlinedInput-root": {
+            borderRadius: 8,
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+        },
+      },
     },
   },
 });
