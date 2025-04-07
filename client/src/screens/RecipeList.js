@@ -91,7 +91,7 @@ const RecipeCard = ({ recipe, onEdit, onDelete }) => {
       >
         <Box
           sx={{
-            height: 140,
+            height: 160,
             backgroundImage: `url(${recipe.photoLink})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
@@ -124,7 +124,15 @@ const RecipeCard = ({ recipe, onEdit, onDelete }) => {
         </Box>
 
         <CardContent
-          sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
+          sx={{
+            flexGrow: 1,
+            display: "flex",
+            flexDirection: "column",
+            px: 2,
+            py: 2,
+            height: 220,
+            "&:last-child": { pb: 2 },
+          }}
         >
           <Typography
             variant="h6"
@@ -146,7 +154,12 @@ const RecipeCard = ({ recipe, onEdit, onDelete }) => {
 
           <Box sx={{ mb: 1, display: "flex", alignItems: "center" }}>
             <RestaurantIcon color="action" fontSize="small" sx={{ mr: 0.5 }} />
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              noWrap
+              sx={{ maxWidth: "100%" }}
+            >
               {recipe.cuisine}
             </Typography>
           </Box>
@@ -462,9 +475,17 @@ const RecipeList = () => {
 
         {/* Recipe Grid */}
         {!loading && !error && recipes.length > 0 && (
-          <Grid container spacing={3}>
+          <Grid container spacing={3} alignItems="stretch">
             {recipes.map((recipe) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={recipe._id}>
+              <Grid
+                item
+                xs={12}
+                sm={6}
+                md={4}
+                lg={3}
+                key={recipe._id}
+                sx={{ display: "flex" }}
+              >
                 <RecipeCard
                   recipe={recipe}
                   onEdit={handleEdit}
