@@ -8,34 +8,50 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const userSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
-    minlength: 3
+/**
+ * User Schema - defines the structure for user documents in MongoDB
+ * @typedef {Object} UserSchema
+ * @property {string} username - Unique username for the user
+ * @property {string} email - Unique email address for the user
+ * @property {string} password - Hashed password for the user
+ * @property {Date} createdAt - Timestamp when the user was created
+ * @property {Date} updatedAt - Timestamp when the user was last updated
+ */
+const userSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      minlength: 3,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+    },
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
-    lowercase: true
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: 6
+  {
+    timestamps: true,
   }
-}, {
-  timestamps: true
-});
+);
 
-// Hash password before saving
-userSchema.pre("save", async function(next) {
+/**
+ * Pre-save middleware to hash the user's password before saving
+ * @param {Function} next - Mongoose middleware next function
+ * @returns {void}
+ */
+userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -45,8 +61,12 @@ userSchema.pre("save", async function(next) {
   }
 });
 
-// Compare password method
-userSchema.methods.comparePassword = async function(candidatePassword) {
+/**
+ * Method to compare a candidate password with the user's hashed password
+ * @param {string} candidatePassword - The plain text password to compare
+ * @returns {Promise<boolean>} True if passwords match, false otherwise
+ */
+userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 

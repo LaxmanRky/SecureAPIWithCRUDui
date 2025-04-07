@@ -46,6 +46,12 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // ===== DATABASE CONNECTION =====
+/**
+ * Connect to MongoDB database
+ * @async
+ * @function connectToDatabase
+ * @returns {Promise<void>} Resolves when connected, exits process on failure
+ */
 const connectToDatabase = async () => {
   console.log("Attempting to connect to MongoDB...");
 
@@ -102,7 +108,15 @@ app.use((req, res, next) => {
 });
 
 // ===== ERROR HANDLING =====
-// Global error handler
+/**
+ * Global error handling middleware
+ * @function errorHandler
+ * @param {Error} err - Error object
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * @returns {Object} JSON error response
+ */
 app.use((err, req, res, next) => {
   console.error("Error details:", {
     message: err.message,
@@ -127,8 +141,12 @@ const server = app.listen(PORT, () => {
   console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
 });
 
-// Handle server shutdown gracefully
-process.on("SIGTERM", () => {
+/**
+ * Handle graceful server shutdown
+ * @function gracefulShutdown
+ * @returns {void}
+ */
+const gracefulShutdown = () => {
   console.log("SIGTERM received. Shutting down gracefully...");
   server.close(() => {
     console.log("Server closed.");
@@ -137,6 +155,10 @@ process.on("SIGTERM", () => {
       process.exit(0);
     });
   });
-});
+};
+
+// Handle server shutdown gracefully
+process.on("SIGTERM", gracefulShutdown);
+process.on("SIGINT", gracefulShutdown);
 
 module.exports = app; // For testing purposes
