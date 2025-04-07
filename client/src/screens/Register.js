@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Container,
   Paper,
@@ -43,6 +43,7 @@ const Register = () => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const validateForm = () => {
     const errors = {};
@@ -79,49 +80,52 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    // Reset errors first
+    setFormErrors({});
+    setError("");
+
+    // Input validation
+    let errors = {};
+    if (!formData.username) errors.username = "Username is required";
+    if (!formData.email) errors.email = "Email is required";
+    if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = "Email is invalid";
+    if (!formData.password) errors.password = "Password is required";
+    if (formData.password.length < 6)
+      errors.password = "Password must be at least 6 characters";
+    if (!formData.confirmPassword)
+      errors.confirmPassword = "Please confirm your password";
+    if (formData.password !== formData.confirmPassword)
+      errors.confirmPassword = "Passwords do not match";
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
 
     try {
-      console.log("Form data being submitted:", {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password.length + " characters",
+      // Submit the form data with individual parameters
+      await register(formData.username, formData.email, formData.password);
+      setSuccessMessage("Registration successful! Redirecting to login...");
+      setIsRedirecting(true);
+
+      // Clear form data
+      setFormData({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
       });
 
-      const response = await register(
-        formData.username,
-        formData.email,
-        formData.password
-      );
-
-      setSuccessMessage("Registration successful! Redirecting...");
-      localStorage.setItem("token", response.token);
+      // Redirect to login page after a short delay
       setTimeout(() => {
-        navigate("/recipes");
-      }, 1500);
-    } catch (err) {
-      console.error("Registration error details:", err.response?.data);
-
-      // Handle specific validation errors
-      if (err.response?.data?.errors) {
-        const validationErrors = {};
-        Object.entries(err.response.data.errors).forEach(([field, message]) => {
-          validationErrors[field] = message;
-        });
-        setFormErrors(validationErrors);
-        setError("Please fix the validation errors");
-      } else if (err.response?.data?.field) {
-        // Handle duplicate field errors
-        setFormErrors({
-          [err.response.data
-            .field]: `This ${err.response.data.field} is already taken`,
-        });
-        setError(`This ${err.response.data.field} is already in use`);
-      } else {
-        setError(
-          err.response?.data?.message || "An error occurred during registration"
-        );
-      }
+        navigate("/login");
+      }, 2000);
+    } catch (error) {
+      console.error("Registration error:", error);
+      setError(
+        error.response?.data?.message ||
+          "Registration failed. Please try again."
+      );
     }
   };
 
@@ -524,9 +528,34 @@ const Register = () => {
             width: "100%",
             borderRadius: 2,
             boxShadow: 3,
+            display: "flex",
+            alignItems: "center",
           }}
         >
           {successMessage}
+          {isRedirecting && (
+            <Box
+              component="span"
+              sx={{
+                display: "inline-block",
+                ml: 1,
+                width: 20,
+                height: 20,
+                borderRadius: "50%",
+                border: "2px solid currentColor",
+                borderTopColor: "transparent",
+                animation: "spin 1s linear infinite",
+                "@keyframes spin": {
+                  "0%": {
+                    transform: "rotate(0deg)",
+                  },
+                  "100%": {
+                    transform: "rotate(360deg)",
+                  },
+                },
+              }}
+            />
+          )}
         </Alert>
       </Snackbar>
     </Container>
