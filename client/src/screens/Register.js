@@ -1,3 +1,10 @@
+/**
+ * File: Register.js
+ * Student's Name: Manoj Bishwakarma, Laxman Rokaya
+ * StudentID: 200544391, 200544400
+ * Date: April 6, 2024
+ */
+
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {

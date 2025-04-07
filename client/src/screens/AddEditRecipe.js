@@ -1,5 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+/**
+ * File: AddEditRecipe.js
+ * Student's Name: Manoj Bishwakarma, Laxman Rokaya
+ * StudentID: 200544391, 200544400
+ * Date: April 6, 2024
+ */
+
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Container,
   Paper,
@@ -12,49 +19,49 @@ import {
   MenuItem,
   Snackbar,
   Alert,
-} from '@mui/material';
-import { ArrowBack, Save } from '@mui/icons-material';
-import axios from 'axios';
+} from "@mui/material";
+import { ArrowBack, Save } from "@mui/icons-material";
+import axios from "axios";
 
-const difficultyLevels = ['Easy', 'Medium', 'Hard'];
+const difficultyLevels = ["Easy", "Medium", "Hard"];
 
 const cuisineTypes = [
-  'African',
-  'American',
-  'Brazilian',
-  'British',
-  'Caribbean',
-  'Chinese',
-  'French',
-  'Greek',
-  'Indian',
-  'Italian',
-  'Japanese',
-  'Korean',
-  'Mediterranean',
-  'Mexican',
-  'Middle Eastern',
-  'Spanish',
-  'Thai',
-  'Vietnamese'
+  "African",
+  "American",
+  "Brazilian",
+  "British",
+  "Caribbean",
+  "Chinese",
+  "French",
+  "Greek",
+  "Indian",
+  "Italian",
+  "Japanese",
+  "Korean",
+  "Mediterranean",
+  "Mexican",
+  "Middle Eastern",
+  "Spanish",
+  "Thai",
+  "Vietnamese",
 ];
 
 const AddEditRecipe = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(id ? true : false);
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [formErrors, setFormErrors] = useState({});
   const [recipe, setRecipe] = useState({
-    recipeName: '',
-    description: '',
+    recipeName: "",
+    description: "",
     ingredients: [],
     instructions: [],
-    cookingTime: '',
-    difficulty: '',
-    cuisine: '',
-    photoLink: '',
+    cookingTime: "",
+    difficulty: "",
+    cuisine: "",
+    photoLink: "",
     averageRating: 0,
   });
 
@@ -66,53 +73,59 @@ const AddEditRecipe = () => {
 
   const fetchRecipe = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/recipes/getAllRecipes/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `http://localhost:5000/api/recipes/getAllRecipes/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setRecipe(response.data);
       setLoading(false);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch recipe');
+      setError(err.response?.data?.message || "Failed to fetch recipe");
       setLoading(false);
     }
   };
 
   const validateForm = () => {
     const errors = {};
-    if (!recipe.recipeName) errors.recipeName = 'Recipe name is required';
-    if (!recipe.description) errors.description = 'Description is required';
-    if (!recipe.ingredients || recipe.ingredients.length === 0) errors.ingredients = 'At least one ingredient is required';
-    if (!recipe.cookingTime) errors.cookingTime = 'Cooking time is required';
-    if (!recipe.difficulty) errors.difficulty = 'Difficulty level is required';
-    if (!recipe.cuisine) errors.cuisine = 'Cuisine is required';
-    if (!recipe.photoLink) errors.photoLink = 'Photo link is required';
+    if (!recipe.recipeName) errors.recipeName = "Recipe name is required";
+    if (!recipe.description) errors.description = "Description is required";
+    if (!recipe.ingredients || recipe.ingredients.length === 0)
+      errors.ingredients = "At least one ingredient is required";
+    if (!recipe.cookingTime) errors.cookingTime = "Cooking time is required";
+    if (!recipe.difficulty) errors.difficulty = "Difficulty level is required";
+    if (!recipe.cuisine) errors.cuisine = "Cuisine is required";
+    if (!recipe.photoLink) errors.photoLink = "Photo link is required";
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'ingredients' || name === 'instructions') {
+    if (name === "ingredients" || name === "instructions") {
       // Split text by new lines and filter out empty lines
-      const items = value.split('\n').filter(item => item.trim() !== '');
-      setRecipe(prev => ({
+      const items = value.split("\n").filter((item) => item.trim() !== "");
+      setRecipe((prev) => ({
         ...prev,
-        [name]: items
+        [name]: items,
       }));
     } else {
-      setRecipe(prev => ({
+      setRecipe((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
   };
 
-
-
   const handleCancel = () => {
-    if (window.confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
-      navigate('/recipes');
+    if (
+      window.confirm(
+        "Are you sure you want to cancel? Any unsaved changes will be lost."
+      )
+    ) {
+      navigate("/recipes");
     }
   };
 
@@ -123,28 +136,38 @@ const AddEditRecipe = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (id) {
-        await axios.put(`http://localhost:5000/api/recipes/updateRecipe/${id}`, recipe, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.put(
+          `http://localhost:5000/api/recipes/updateRecipe/${id}`,
+          recipe,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       } else {
-        await axios.post('http://localhost:5000/api/recipes/createRecipe', recipe, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(
+          "http://localhost:5000/api/recipes/createRecipe",
+          recipe,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       }
-      setSuccessMessage(id ? 'Recipe updated successfully!' : 'Recipe added successfully!');
+      setSuccessMessage(
+        id ? "Recipe updated successfully!" : "Recipe added successfully!"
+      );
       setTimeout(() => {
-        navigate('/recipes');
+        navigate("/recipes");
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save recipe');
+      setError(err.response?.data?.message || "Failed to save recipe");
     }
   };
 
   if (loading) {
     return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+      <Container sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <CircularProgress />
       </Container>
     );
@@ -155,7 +178,7 @@ const AddEditRecipe = () => {
       <Box sx={{ marginTop: 4, marginBottom: 4 }}>
         <Paper elevation={3} sx={{ padding: 4 }}>
           <Typography component="h1" variant="h5" align="center" gutterBottom>
-            {id ? 'Edit Recipe' : 'Add New Recipe'}
+            {id ? "Edit Recipe" : "Add New Recipe"}
           </Typography>
           {error && (
             <Typography color="error" align="center" gutterBottom>
@@ -213,7 +236,7 @@ const AddEditRecipe = () => {
               rows={4}
               label="Ingredients (one per line)"
               name="ingredients"
-              value={recipe.ingredients.join('\n')}
+              value={recipe.ingredients.join("\n")}
               onChange={handleChange}
               error={!!formErrors.ingredients}
               helperText={formErrors.ingredients}
@@ -227,13 +250,13 @@ const AddEditRecipe = () => {
               rows={4}
               label="Instructions (numbered steps)"
               name="instructions"
-              value={recipe.instructions.join('\n')}
+              value={recipe.instructions.join("\n")}
               onChange={handleChange}
               error={!!formErrors.instructions}
               helperText={formErrors.instructions}
               placeholder="1. Preheat oven to 350°F\n2. Mix ingredients\n3. Bake for 30 minutes"
             />
-            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
               <TextField
                 required
                 label="Cooking Time (minutes)"
@@ -281,14 +304,14 @@ const AddEditRecipe = () => {
                 name="averageRating"
                 value={recipe.averageRating}
                 onChange={(event, newValue) => {
-                  setRecipe(prev => ({
+                  setRecipe((prev) => ({
                     ...prev,
-                    averageRating: newValue
+                    averageRating: newValue,
                   }));
                 }}
               />
             </Box>
-            <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+            <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
               <Button
                 variant="outlined"
                 onClick={handleCancel}
@@ -304,9 +327,8 @@ const AddEditRecipe = () => {
                 startIcon={<Save />}
                 sx={{ flex: 1 }}
               >
-                {id ? 'Save Changes' : 'Add Recipe'}
+                {id ? "Save Changes" : "Add Recipe"}
               </Button>
-
             </Box>
           </form>
         </Paper>
@@ -314,9 +336,9 @@ const AddEditRecipe = () => {
       <Snackbar
         open={!!successMessage}
         autoHideDuration={2000}
-        onClose={() => setSuccessMessage('')}
+        onClose={() => setSuccessMessage("")}
       >
-        <Alert severity="success" sx={{ width: '100%' }}>
+        <Alert severity="success" sx={{ width: "100%" }}>
           {successMessage}
         </Alert>
       </Snackbar>

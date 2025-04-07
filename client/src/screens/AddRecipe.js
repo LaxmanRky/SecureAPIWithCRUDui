@@ -1,5 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+/**
+ * File: AddRecipe.js
+ * Student's Name: Manoj Bishwakarma, Laxman Rokaya
+ * StudentID: 200544391, 200544400
+ * Date: April 6, 2024
+ */
+
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Container,
   Paper,
@@ -8,23 +15,23 @@ import {
   Typography,
   Box,
   Rating,
-} from '@mui/material';
-import axios from 'axios';
+} from "@mui/material";
+import axios from "axios";
 
 const AddRecipe = () => {
   const [recipe, setRecipe] = useState({
-    recipeName: '',
-    cuisine: '',
-    ingredients: '',
-    instructions: '',
-    prepTime: '',
-    cookTime: '',
-    totalTime: '',
-    servings: '',
-    difficulty: '',
+    recipeName: "",
+    cuisine: "",
+    ingredients: "",
+    instructions: "",
+    prepTime: "",
+    cookTime: "",
+    totalTime: "",
+    servings: "",
+    difficulty: "",
     averageRating: 0,
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -38,17 +45,17 @@ const AddRecipe = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       await axios.post(
-        'http://localhost:5000/api/recipes/createRecipe',
+        "http://localhost:5000/api/recipes/createRecipe",
         recipe,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      navigate('/recipes');
+      navigate("/recipes");
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred');
+      setError(err.response?.data?.message || "An error occurred");
     }
   };
 
@@ -105,7 +112,7 @@ const AddRecipe = () => {
               value={recipe.instructions}
               onChange={handleChange}
             />
-            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
               <TextField
                 required
                 label="Prep Time"
@@ -128,7 +135,7 @@ const AddRecipe = () => {
                 onChange={handleChange}
               />
             </Box>
-            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
               <TextField
                 required
                 label="Servings"
@@ -158,7 +165,7 @@ const AddRecipe = () => {
                 }}
               />
             </Box>
-            <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+            <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
               <Button
                 type="submit"
                 fullWidth
@@ -170,7 +177,7 @@ const AddRecipe = () => {
               <Button
                 fullWidth
                 variant="outlined"
-                onClick={() => navigate('/recipes')}
+                onClick={() => navigate("/recipes")}
               >
                 Cancel
               </Button>

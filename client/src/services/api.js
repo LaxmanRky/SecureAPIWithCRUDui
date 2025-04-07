@@ -1,3 +1,10 @@
+/**
+ * File: api.js
+ * Student's Name: Manoj Bishwakarma, Laxman Rokaya
+ * StudentID: 200544391, 200544400
+ * Date: April 6, 2024
+ */
+
 import axios from "axios";
 
 const API_URL = "http://localhost:5000/api";
