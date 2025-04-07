@@ -117,12 +117,6 @@ const AddEditRecipe = () => {
     }
   }, [id]);
 
-  useEffect(() => {
-    if (recipe.photoLink) {
-      setPreviewUrl(recipe.photoLink);
-    }
-  }, [recipe.photoLink]);
-
   const fetchRecipe = async () => {
     try {
       setLoading(true);
@@ -134,7 +128,6 @@ const AddEditRecipe = () => {
         }
       );
       setRecipe(response.data);
-      setPreviewUrl(response.data.photoLink);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch recipe");
     } finally {
@@ -173,6 +166,83 @@ const AddEditRecipe = () => {
         ...prev,
         [name]: value,
       }));
+    }
+  };
+
+  // Add new function to handle key press in text areas
+  const handleKeyDown = (e, fieldName) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+
+      const cursorPosition = e.target.selectionStart;
+      const currentValue = e.target.value;
+
+      // Get text before and after the cursor
+      const textBeforeCursor = currentValue.substring(0, cursorPosition);
+      const textAfterCursor = currentValue.substring(cursorPosition);
+
+      let newText;
+      let numberMatch = null;
+
+      // Handle both instructions and ingredients with numbering
+      const lines = textBeforeCursor.split("\n");
+      const lastLine = lines[lines.length - 1];
+
+      // Extract the number from the last line if it exists (works for both formats: "1." or "1 ")
+      numberMatch = lastLine.match(/^(\d+)[\.\s]/);
+
+      if (numberMatch) {
+        // If last line has a number, increment it for the new line
+        const lastNumber = parseInt(numberMatch[1]);
+        const nextNumber = lastNumber + 1;
+        // Use different formatting based on field type
+        if (fieldName === "instructions") {
+          newText =
+            textBeforeCursor + "\n" + nextNumber + ". " + textAfterCursor;
+        } else {
+          // For ingredients, use a space instead of a period
+          newText =
+            textBeforeCursor + "\n" + nextNumber + " " + textAfterCursor;
+        }
+      } else {
+        // If no numbered lines yet, start with 1
+        if (fieldName === "instructions") {
+          newText = textBeforeCursor + "\n1. " + textAfterCursor;
+        } else {
+          newText = textBeforeCursor + "\n1 " + textAfterCursor;
+        }
+      }
+
+      // Update the field value
+      const event = {
+        target: {
+          name: fieldName,
+          value: newText,
+        },
+      };
+
+      handleChange(event);
+
+      // Set cursor position after the auto-added text
+      setTimeout(() => {
+        const newPosition =
+          cursorPosition +
+          (numberMatch
+            ? fieldName === "instructions"
+              ? 4
+              : 3 // "X. " vs "X "
+            : fieldName === "instructions"
+            ? 3
+            : 2); // "1. " vs "1 "
+
+        const textarea = document.querySelector(
+          `textarea[name="${fieldName}"]`
+        );
+        if (textarea) {
+          textarea.setSelectionRange(newPosition, newPosition);
+          textarea.focus();
+        }
+      }, 0);
     }
   };
 
@@ -246,21 +316,20 @@ const AddEditRecipe = () => {
     <Box
       sx={{
         minHeight: "100vh",
-        background: `linear-gradient(135deg, ${theme.palette.grey[50]}, ${theme.palette.grey[100]})`,
-        pt: { xs: 3, md: 4 },
-        pb: 8,
+        background: `linear-gradient(165deg, #f5f7fa 0%, #e4e7eb 100%)`,
+        pt: { xs: 2, md: 3 },
+        pb: { xs: 4, md: 6 },
       }}
     >
       <Container maxWidth="md">
         <Paper
           elevation={0}
           sx={{
-            p: { xs: 2, sm: 3, md: 4 },
+            p: { xs: 3, sm: 4, md: 5 },
             borderRadius: 3,
             backgroundColor: "white",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
             position: "relative",
-            overflow: "hidden",
             mb: 4,
           }}
         >
@@ -270,22 +339,33 @@ const AddEditRecipe = () => {
               top: 0,
               left: 0,
               right: 0,
-              height: "4px",
-              background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              height: "6px",
+              background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+              borderTopLeftRadius: 3,
+              borderTopRightRadius: 3,
             }}
           />
 
-          <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              mb: 4,
+              flexWrap: { xs: "wrap", sm: "nowrap" },
+              gap: { xs: 2, sm: 0 },
+            }}
+          >
             <Avatar
               sx={{
                 bgcolor: theme.palette.primary.main,
-                mr: 2,
-                width: 50,
-                height: 50,
-                boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                mr: { xs: 1, sm: 2 },
+                width: 64,
+                height: 64,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                border: "4px solid white",
               }}
             >
-              <RestaurantIcon fontSize="medium" />
+              <RestaurantIcon sx={{ fontSize: 32 }} />
             </Avatar>
             <Box>
               <Typography
@@ -293,17 +373,24 @@ const AddEditRecipe = () => {
                 component="h1"
                 fontWeight="800"
                 sx={{
-                  fontSize: { xs: "1.5rem", sm: "1.75rem" },
+                  fontSize: { xs: "1.8rem", sm: "2.2rem" },
                   letterSpacing: "-0.01em",
+                  background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  display: "inline-block",
+                  lineHeight: 1.2,
                 }}
               >
                 {id ? "Edit Recipe" : "Create New Recipe"}
               </Typography>
               <Typography
-                variant="body2"
+                variant="body1"
                 color="text.secondary"
                 sx={{
                   mt: 0.5,
+                  fontSize: { xs: "0.95rem", sm: "1rem" },
+                  fontWeight: 500,
                 }}
               >
                 {id
@@ -316,7 +403,11 @@ const AddEditRecipe = () => {
           {error && (
             <Alert
               severity="error"
-              sx={{ mb: 3, borderRadius: 2 }}
+              sx={{
+                mb: 3,
+                borderRadius: 2,
+                boxShadow: "0 4px 12px rgba(211, 47, 47, 0.15)",
+              }}
               onClose={() => setError("")}
             >
               {error}
@@ -324,11 +415,28 @@ const AddEditRecipe = () => {
           )}
 
           <form onSubmit={handleSubmit}>
-            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                mb: 3,
+                fontWeight: 700,
+                fontSize: "1.25rem",
+                color: theme.palette.text.primary,
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <FastfoodIcon
+                sx={{
+                  mr: 1.5,
+                  color: theme.palette.primary.main,
+                  fontSize: 26,
+                }}
+              />
               Basic Information
             </Typography>
 
-            <Grid container spacing={3}>
+            <Grid container spacing={3} alignItems="flex-start">
               <Grid item xs={12} md={6}>
                 <TextField
                   required
@@ -348,11 +456,48 @@ const AddEditRecipe = () => {
                   }}
                   placeholder="E.g., Creamy Garlic Pasta"
                   variant="outlined"
+                  size="medium"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
+                      transition: "all 0.2s ease",
+                      height: 56,
+                      "&:hover": {
+                        boxShadow: "0 3px 8px rgba(0,0,0,0.12)",
+                      },
+                      "&.Mui-focused": {
+                        boxShadow: "0 0 0 3px rgba(25, 118, 210, 0.15)",
+                      },
+                    },
+                    "& .MuiInputBase-input": {
+                      height: "1.4375em",
+                    },
+                  }}
                 />
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <FormControl fullWidth required error={!!formErrors.cuisine}>
+                <FormControl
+                  fullWidth
+                  required
+                  error={!!formErrors.cuisine}
+                  size="medium"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
+                      transition: "all 0.2s ease",
+                      height: 56,
+                      "&:hover": {
+                        boxShadow: "0 3px 8px rgba(0,0,0,0.12)",
+                      },
+                      "&.Mui-focused": {
+                        boxShadow: "0 0 0 3px rgba(25, 118, 210, 0.15)",
+                      },
+                    },
+                  }}
+                >
                   <InputLabel id="cuisine-label">Cuisine</InputLabel>
                   <Select
                     labelId="cuisine-label"
@@ -404,34 +549,99 @@ const AddEditRecipe = () => {
                   }}
                   placeholder="Briefly describe your recipe and what makes it special..."
                   variant="outlined"
+                  size="medium"
+                  sx={{
+                    mt: 1,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        boxShadow: "0 3px 8px rgba(0,0,0,0.12)",
+                      },
+                      "&.Mui-focused": {
+                        boxShadow: "0 0 0 3px rgba(25, 118, 210, 0.15)",
+                      },
+                    },
+                  }}
                 />
               </Grid>
             </Grid>
 
-            <Divider sx={{ my: 4 }} />
+            <Box
+              component={Divider}
+              sx={{
+                my: 4,
+                borderColor: "rgba(0,0,0,0.09)",
+                opacity: 0.8,
+              }}
+            />
 
-            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                mb: 3,
+                fontWeight: 700,
+                fontSize: "1.25rem",
+                color: theme.palette.text.primary,
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <ListAltIcon
+                sx={{
+                  mr: 1.5,
+                  color: theme.palette.primary.main,
+                  fontSize: 26,
+                }}
+              />
               Ingredients & Instructions
             </Typography>
 
-            <Grid container spacing={3}>
+            <Grid container spacing={3} alignItems="stretch">
               <Grid item xs={12} md={6}>
                 <TextField
                   required
                   fullWidth
                   multiline
-                  rows={8}
+                  rows={10}
                   label="Ingredients (one per line)"
                   name="ingredients"
                   value={recipe.ingredients.join("\n")}
                   onChange={handleChange}
+                  onKeyDown={(e) => handleKeyDown(e, "ingredients")}
                   error={!!formErrors.ingredients}
                   helperText={
                     formErrors.ingredients ||
-                    "Enter each ingredient on a new line"
+                    "Press Enter to add a new numbered ingredient automatically"
                   }
-                  placeholder="1 cup flour&#10;2 eggs&#10;1/2 cup sugar&#10;1 tsp vanilla extract"
+                  placeholder="1 cup all-purpose flour
+2 large eggs
+3 tbsp white sugar
+4 tsp vanilla extract
+5 tbsp butter, melted
+6 tsp salt"
                   variant="outlined"
+                  size="medium"
+                  sx={{
+                    height: "100%",
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      height: "100%",
+                      boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        boxShadow: "0 3px 8px rgba(0,0,0,0.12)",
+                      },
+                      "&.Mui-focused": {
+                        boxShadow: "0 0 0 3px rgba(25, 118, 210, 0.15)",
+                      },
+                    },
+                    "& .MuiInputBase-input": {
+                      fontFamily: "monospace",
+                      fontSize: "0.95rem",
+                    },
+                  }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment
@@ -441,6 +651,7 @@ const AddEditRecipe = () => {
                         <ListAltIcon color="primary" />
                       </InputAdornment>
                     ),
+                    sx: { height: "100%" },
                   }}
                 />
               </Grid>
@@ -450,17 +661,44 @@ const AddEditRecipe = () => {
                   required
                   fullWidth
                   multiline
-                  rows={8}
+                  rows={10}
                   label="Instructions (numbered steps)"
                   name="instructions"
                   value={recipe.instructions.join("\n")}
                   onChange={handleChange}
+                  onKeyDown={(e) => handleKeyDown(e, "instructions")}
                   error={!!formErrors.instructions}
                   helperText={
-                    formErrors.instructions || "Enter each step on a new line"
+                    formErrors.instructions ||
+                    "Press Enter to add a new numbered step automatically"
                   }
-                  placeholder="1. Preheat oven to 350°F&#10;2. Mix flour, sugar, and eggs&#10;3. Pour into pan&#10;4. Bake for 30 minutes"
+                  placeholder="1. Preheat oven to 350°F (175°C)
+2. Mix flour, sugar, and salt in a large bowl
+3. Add eggs and vanilla, stir until combined
+4. Fold in melted butter until smooth
+5. Pour batter into prepared pan
+6. Bake for 25-30 minutes or until golden"
                   variant="outlined"
+                  size="medium"
+                  sx={{
+                    height: "100%",
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      height: "100%",
+                      boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        boxShadow: "0 3px 8px rgba(0,0,0,0.12)",
+                      },
+                      "&.Mui-focused": {
+                        boxShadow: "0 0 0 3px rgba(25, 118, 210, 0.15)",
+                      },
+                    },
+                    "& .MuiInputBase-input": {
+                      fontFamily: "monospace",
+                      fontSize: "0.95rem",
+                    },
+                  }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment
@@ -470,18 +708,43 @@ const AddEditRecipe = () => {
                         <ListAltIcon color="primary" />
                       </InputAdornment>
                     ),
+                    sx: { height: "100%" },
                   }}
                 />
               </Grid>
             </Grid>
 
-            <Divider sx={{ my: 4 }} />
+            <Box
+              component={Divider}
+              sx={{
+                my: 4,
+                borderColor: "rgba(0,0,0,0.09)",
+                opacity: 0.8,
+              }}
+            />
 
-            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                mb: 3,
+                fontWeight: 700,
+                fontSize: "1.25rem",
+                color: theme.palette.text.primary,
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <TimeIcon
+                sx={{
+                  mr: 1.5,
+                  color: theme.palette.primary.main,
+                  fontSize: 26,
+                }}
+              />
               Additional Details
             </Typography>
 
-            <Grid container spacing={3}>
+            <Grid container spacing={3} alignItems="flex-start">
               <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   required
@@ -495,6 +758,21 @@ const AddEditRecipe = () => {
                   helperText={formErrors.cookingTime}
                   inputProps={{ min: 0 }}
                   variant="outlined"
+                  size="medium"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
+                      transition: "all 0.2s ease",
+                      height: 56,
+                      "&:hover": {
+                        boxShadow: "0 3px 8px rgba(0,0,0,0.12)",
+                      },
+                      "&.Mui-focused": {
+                        boxShadow: "0 0 0 3px rgba(25, 118, 210, 0.15)",
+                      },
+                    },
+                  }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -509,7 +787,26 @@ const AddEditRecipe = () => {
               </Grid>
 
               <Grid item xs={12} sm={6} md={4}>
-                <FormControl fullWidth required error={!!formErrors.difficulty}>
+                <FormControl
+                  fullWidth
+                  required
+                  error={!!formErrors.difficulty}
+                  size="medium"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
+                      transition: "all 0.2s ease",
+                      height: 56,
+                      "&:hover": {
+                        boxShadow: "0 3px 8px rgba(0,0,0,0.12)",
+                      },
+                      "&.Mui-focused": {
+                        boxShadow: "0 0 0 3px rgba(25, 118, 210, 0.15)",
+                      },
+                    },
+                  }}
+                >
                   <InputLabel id="difficulty-label">Difficulty</InputLabel>
                   <Select
                     labelId="difficulty-label"
@@ -545,17 +842,29 @@ const AddEditRecipe = () => {
               </Grid>
 
               <Grid item xs={12} md={4}>
-                <Box
+                <Paper
+                  elevation={0}
                   sx={{
+                    p: 2,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    borderRadius: 2,
+                    height: 56,
                     display: "flex",
-                    flexDirection: "column",
-                    height: "100%",
+                    alignItems: "center",
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      boxShadow: "0 3px 8px rgba(0,0,0,0.12)",
+                    },
                   }}
                 >
-                  <Typography component="legend" sx={{ mb: 1 }}>
-                    Recipe Rating
+                  <Typography
+                    sx={{ mr: 2, fontWeight: 600, whiteSpace: "nowrap" }}
+                  >
+                    Recipe Rating:
                   </Typography>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
                     <Rating
                       name="averageRating"
                       value={recipe.averageRating}
@@ -567,7 +876,15 @@ const AddEditRecipe = () => {
                         }));
                       }}
                       emptyIcon={<StarBorderIcon fontSize="inherit" />}
-                      size="large"
+                      size="medium"
+                      sx={{
+                        "& .MuiRating-iconFilled": {
+                          color: theme.palette.warning.main,
+                        },
+                        "& .MuiRating-iconHover": {
+                          color: theme.palette.warning.light,
+                        },
+                      }}
                     />
                     <Typography
                       variant="body2"
@@ -577,10 +894,10 @@ const AddEditRecipe = () => {
                       ({recipe.averageRating || 0})
                     </Typography>
                   </Box>
-                </Box>
+                </Paper>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid item xs={12} sx={{ mt: 2 }}>
                 <TextField
                   required
                   fullWidth
@@ -594,6 +911,21 @@ const AddEditRecipe = () => {
                   }
                   placeholder="https://example.com/photo.jpg"
                   variant="outlined"
+                  size="medium"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
+                      transition: "all 0.2s ease",
+                      height: 56,
+                      "&:hover": {
+                        boxShadow: "0 3px 8px rgba(0,0,0,0.12)",
+                      },
+                      "&.Mui-focused": {
+                        boxShadow: "0 0 0 3px rgba(25, 118, 210, 0.15)",
+                      },
+                    },
+                  }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -603,34 +935,13 @@ const AddEditRecipe = () => {
                   }}
                 />
               </Grid>
-
-              {previewUrl && (
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Image Preview:
-                  </Typography>
-                  <Box
-                    sx={{
-                      height: 200,
-                      borderRadius: 2,
-                      overflow: "hidden",
-                      position: "relative",
-                      backgroundImage: `url(${previewUrl})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                      border: "1px solid",
-                      borderColor: "divider",
-                    }}
-                  />
-                </Grid>
-              )}
             </Grid>
 
             <Box
               sx={{
                 display: "flex",
-                justifyContent: "space-between",
-                mt: 4,
+                justifyContent: "flex-end",
+                mt: 5,
                 gap: 2,
               }}
             >
@@ -640,10 +951,17 @@ const AddEditRecipe = () => {
                 startIcon={<ArrowBack />}
                 sx={{
                   borderRadius: 2,
-                  px: 3,
-                  py: 1.2,
+                  px: { xs: 2, sm: 3 },
+                  py: 1.5,
                   textTransform: "none",
                   fontWeight: 600,
+                  minWidth: 120,
+                  height: 48,
+                  borderWidth: "1.5px",
+                  "&:hover": {
+                    borderWidth: "1.5px",
+                    backgroundColor: "rgba(0,0,0,0.04)",
+                  },
                 }}
               >
                 Cancel
@@ -656,15 +974,17 @@ const AddEditRecipe = () => {
                 startIcon={<Save />}
                 sx={{
                   borderRadius: 2,
-                  px: 4,
-                  py: 1.2,
+                  px: { xs: 3, sm: 4 },
+                  py: 1.5,
                   textTransform: "none",
                   fontWeight: 600,
-                  boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                  boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
+                  height: 48,
+                  minWidth: 160,
+                  background: theme.palette.primary.main,
                   "&:hover": {
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 6px 15px rgba(0,0,0,0.15)",
+                    boxShadow: "0 6px 15px rgba(0,0,0,0.2)",
+                    background: theme.palette.primary.dark,
                   },
                 }}
               >
@@ -687,7 +1007,7 @@ const AddEditRecipe = () => {
           sx={{
             width: "100%",
             borderRadius: 2,
-            boxShadow: "0 4px 12px rgba(0, 150, 0, 0.15)",
+            boxShadow: "0 8px 16px rgba(0, 150, 0, 0.2)",
           }}
         >
           {successMessage}
