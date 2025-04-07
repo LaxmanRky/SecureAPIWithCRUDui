@@ -247,6 +247,34 @@ const RecipeCard = ({ recipe, onEdit, onDelete }) => {
             {recipe.description}
           </Typography>
 
+          <Box
+            sx={{ mt: "auto", display: "flex", alignItems: "center", mb: 2 }}
+          >
+            <Rating
+              value={recipe.averageRating || 0}
+              precision={0.5}
+              size="small"
+              readOnly
+              sx={{
+                mr: 1,
+                "& .MuiRating-iconFilled": {
+                  color: theme.palette.warning.main,
+                },
+              }}
+            />
+            <Typography
+              variant="body2"
+              sx={{
+                color: theme.palette.text.secondary,
+                fontWeight: 500,
+              }}
+            >
+              {recipe.averageRating
+                ? `${recipe.averageRating.toFixed(1)}/5`
+                : "No ratings"}
+            </Typography>
+          </Box>
+
           <Box sx={{ mt: "auto" }}>
             <Box
               sx={{
@@ -318,6 +346,7 @@ const RecipeCardSkeleton = () => (
       <Skeleton variant="text" height={24} width="40%" sx={{ mb: 1.5 }} />
       <Skeleton variant="text" height={24} width="100%" />
       <Skeleton variant="text" height={24} width="100%" sx={{ mb: 1.5 }} />
+      <Skeleton variant="text" height={24} width="45%" sx={{ mb: 1.5 }} />
       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
         <Skeleton variant="circular" width={36} height={36} />
         <Skeleton variant="circular" width={36} height={36} />
