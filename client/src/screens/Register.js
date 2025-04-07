@@ -50,62 +50,97 @@ const Register = () => {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const navigate = useNavigate();
 
+  /**
+   * Toggle password visibility
+   */
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
 
+  /**
+   * Toggle confirm password visibility
+   */
   const handleClickShowConfirmPassword = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
-  const handleChange = (e) => {
+  /**
+   * Handle input change and clear errors
+   */
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Clear error when user starts typing
-    if (formErrors[name]) {
-      setFormErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
-    // Clear general error message
-    if (error) setError("");
+    setFormData({ ...formData, [name]: value });
+    setFormErrors({ ...formErrors, [name]: "" });
   };
 
+  /**
+   * Handle input blur and clear general errors
+   */
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    if (formErrors.general) {
+      setFormErrors({ ...formErrors, general: "" });
+    }
+  };
+
+  /**
+   * Handle form submission with validation
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Reset errors first
+    setIsRedirecting(true);
     setFormErrors({});
     setError("");
 
-    // Input validation
-    let errors = {};
-    if (!formData.username) errors.username = "Username is required";
-    if (!formData.email) errors.email = "Email is required";
-    if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = "Email is invalid";
-    if (!formData.password) errors.password = "Password is required";
-    if (formData.password.length < 6)
-      errors.password = "Password must be at least 6 characters";
-    if (!formData.confirmPassword)
-      errors.confirmPassword = "Please confirm your password";
-    if (formData.password !== formData.confirmPassword)
-      errors.confirmPassword = "Passwords do not match";
+    if (!formData.username) {
+      setFormErrors((prev) => ({ ...prev, username: "Username is required" }));
+      setIsRedirecting(false);
+      return;
+    }
 
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
+    if (!formData.email) {
+      setFormErrors((prev) => ({ ...prev, email: "Email is required" }));
+      setIsRedirecting(false);
+      return;
+    }
+
+    if (!formData.password) {
+      setFormErrors((prev) => ({ ...prev, password: "Password is required" }));
+      setIsRedirecting(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setFormErrors((prev) => ({
+        ...prev,
+        password: "Password must be at least 6 characters",
+      }));
+      setIsRedirecting(false);
+      return;
+    }
+
+    if (!formData.confirmPassword) {
+      setFormErrors((prev) => ({
+        ...prev,
+        confirmPassword: "Please confirm your password",
+      }));
+      setIsRedirecting(false);
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setFormErrors((prev) => ({
+        ...prev,
+        confirmPassword: "Passwords do not match",
+      }));
+      setIsRedirecting(false);
       return;
     }
 
     try {
-      // Submit the form data with individual parameters
       await register(formData.username, formData.email, formData.password);
       setSuccessMessage("Registration successful! Redirecting to login...");
-      setIsRedirecting(true);
 
-      // Clear form data
       setFormData({
         username: "",
         email: "",
@@ -113,16 +148,14 @@ const Register = () => {
         confirmPassword: "",
       });
 
-      // Redirect to login page after a short delay
       setTimeout(() => {
         navigate("/login");
       }, 2000);
     } catch (error) {
-      console.error("Registration error:", error);
-      setError(
-        error.response?.data?.message ||
-          "Registration failed. Please try again."
-      );
+      const message = error.response?.data?.message || "Registration failed";
+      setError(message);
+    } finally {
+      setIsRedirecting(false);
     }
   };
 
@@ -228,7 +261,7 @@ const Register = () => {
                   label="Username"
                   name="username"
                   value={formData.username}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   error={!!formErrors.username}
                   helperText={formErrors.username}
                   variant="outlined"
@@ -261,7 +294,7 @@ const Register = () => {
                   name="email"
                   type="email"
                   value={formData.email}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   error={!!formErrors.email}
                   helperText={formErrors.email}
                   variant="outlined"
@@ -294,7 +327,7 @@ const Register = () => {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   error={!!formErrors.password}
                   helperText={formErrors.password}
                   variant="outlined"
@@ -338,7 +371,7 @@ const Register = () => {
                   name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   value={formData.confirmPassword}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   error={!!formErrors.confirmPassword}
                   helperText={formErrors.confirmPassword}
                   variant="outlined"

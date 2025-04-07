@@ -125,6 +125,9 @@ const AddEditRecipe = () => {
     }
   }, [recipe.photoLink]);
 
+  /**
+   * Fetch recipe data from API for editing
+   */
   const fetchRecipe = async () => {
     try {
       setLoading(true);
@@ -144,6 +147,9 @@ const AddEditRecipe = () => {
     }
   };
 
+  /**
+   * Validate form fields and return validation status
+   */
   const validateForm = () => {
     const errors = {};
     if (!recipe.recipeName) errors.recipeName = "Recipe name is required";
@@ -159,10 +165,12 @@ const AddEditRecipe = () => {
     return Object.keys(errors).length === 0;
   };
 
+  /**
+   * Handle input field changes with special processing for ingredients
+   */
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "ingredients") {
-      // Split text by new lines and filter out empty lines
       const items = value.split("\n").filter((item) => item.trim() !== "");
       setRecipe((prev) => ({
         ...prev,
@@ -176,7 +184,9 @@ const AddEditRecipe = () => {
     }
   };
 
-  // Add new function to handle key press in text areas
+  /**
+   * Handle Enter key press to auto-number ingredients
+   */
   const handleKeyDown = (e, fieldName) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -184,32 +194,25 @@ const AddEditRecipe = () => {
       const cursorPosition = e.target.selectionStart;
       const currentValue = e.target.value;
 
-      // Get text before and after the cursor
       const textBeforeCursor = currentValue.substring(0, cursorPosition);
       const textAfterCursor = currentValue.substring(cursorPosition);
 
       let newText;
       let numberMatch = null;
 
-      // Handle ingredients with numbering
       const lines = textBeforeCursor.split("\n");
       const lastLine = lines[lines.length - 1];
 
-      // Extract the number from the last line if it exists
       numberMatch = lastLine.match(/^(\d+)[\.\s]/);
 
       if (numberMatch) {
-        // If last line has a number, increment it for the new line
         const lastNumber = parseInt(numberMatch[1]);
         const nextNumber = lastNumber + 1;
-        // For ingredients, use a space instead of a period
         newText = textBeforeCursor + "\n" + nextNumber + " " + textAfterCursor;
       } else {
-        // If no numbered lines yet, start with 1
         newText = textBeforeCursor + "\n1 " + textAfterCursor;
       }
 
-      // Update the field value
       const event = {
         target: {
           name: fieldName,
@@ -219,9 +222,8 @@ const AddEditRecipe = () => {
 
       handleChange(event);
 
-      // Set cursor position after the auto-added text
       setTimeout(() => {
-        const newPosition = cursorPosition + (numberMatch ? 3 : 2); // "X " or "1 "
+        const newPosition = cursorPosition + (numberMatch ? 3 : 2);
 
         const textarea = document.querySelector(
           `textarea[name="${fieldName}"]`
@@ -234,6 +236,9 @@ const AddEditRecipe = () => {
     }
   };
 
+  /**
+   * Handle cancel button click with confirmation
+   */
   const handleCancel = () => {
     if (
       window.confirm(
@@ -244,6 +249,9 @@ const AddEditRecipe = () => {
     }
   };
 
+  /**
+   * Handle form submission with validation
+   */
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
 

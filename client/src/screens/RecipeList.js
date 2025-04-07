@@ -48,51 +48,40 @@ import {
   Star as StarIcon,
 } from "@mui/icons-material";
 
+// Set color based on difficulty level
+const getDifficultyColor = (difficulty, theme) => {
+  switch (difficulty.toLowerCase()) {
+    case "easy":
+      return theme.palette.success.main;
+    case "medium":
+      return theme.palette.warning.main;
+    case "hard":
+      return theme.palette.error.main;
+    default:
+      return theme.palette.info.main;
+  }
+};
+
 // Custom Recipe Card Component
 const RecipeCard = ({ recipe, onEdit, onDelete }) => {
   const theme = useTheme();
-  const [elevation, setElevation] = useState(2);
-
-  // Define difficulty color based on level
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty) {
-      case "Easy":
-        return theme.palette.success.main;
-      case "Medium":
-        return theme.palette.warning.main;
-      case "Hard":
-        return theme.palette.error.main;
-      default:
-        return theme.palette.info.main;
-    }
-  };
 
   return (
-    <Zoom in={true} style={{ transitionDelay: "50ms" }}>
+    <Zoom in={true}>
       <Card
-        elevation={elevation}
-        onMouseOver={() => setElevation(6)}
-        onMouseOut={() => setElevation(2)}
+        elevation={0}
         sx={{
           height: "100%",
           width: "100%",
           display: "flex",
           flexDirection: "column",
-          transition: "transform 0.3s ease, box-shadow 0.3s ease",
-          "&:hover": {
-            transform: "translateY(-8px)",
-          },
-          position: "relative",
-          overflow: "hidden",
           borderRadius: 3,
-          "&::before": {
-            content: '""',
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: "4px",
-            background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+          overflow: "hidden",
+          transition: "transform 0.2s ease, box-shadow 0.3s ease",
+          boxShadow: "0 8px 25px rgba(0,0,0,0.05)",
+          "&:hover": {
+            transform: "translateY(-5px)",
+            boxShadow: "0 14px 30px rgba(0,0,0,0.1)",
           },
         }}
       >
@@ -139,7 +128,7 @@ const RecipeCard = ({ recipe, onEdit, onDelete }) => {
               label={recipe.difficulty}
               size="small"
               sx={{
-                backgroundColor: getDifficultyColor(recipe.difficulty),
+                backgroundColor: getDifficultyColor(recipe.difficulty, theme),
                 color: "white",
                 fontWeight: "bold",
                 letterSpacing: "0.5px",
@@ -358,16 +347,12 @@ const RecipeCardSkeleton = () => (
 const RecipeList = () => {
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Delete confirmation dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -394,24 +379,39 @@ const RecipeList = () => {
     }
   };
 
+  /**
+   * Navigate to add recipe page
+   */
   const handleAdd = () => {
     navigate("/add");
   };
 
+  /**
+   * Navigate to edit recipe page
+   */
   const handleEdit = (id) => {
     navigate(`/edit/${id}`);
   };
 
+  /**
+   * Open delete confirmation dialog
+   */
   const openDeleteDialog = (id) => {
     setRecipeToDelete(id);
     setDeleteDialogOpen(true);
   };
 
+  /**
+   * Close delete confirmation dialog
+   */
   const closeDeleteDialog = () => {
     setDeleteDialogOpen(false);
     setRecipeToDelete(null);
   };
 
+  /**
+   * Delete recipe after confirmation
+   */
   const confirmDelete = async () => {
     if (!recipeToDelete) return;
 
@@ -419,32 +419,20 @@ const RecipeList = () => {
       await deleteRecipe(recipeToDelete);
       setDeleteDialogOpen(false);
       setRecipeToDelete(null);
-      // Show success message
-      setSnackbar({
-        open: true,
-        message: "Recipe deleted successfully",
-        severity: "success",
-      });
-      // Refresh recipes list
+      setSuccessMessage("Recipe deleted successfully");
       fetchRecipes();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete recipe");
       setDeleteDialogOpen(false);
-      setSnackbar({
-        open: true,
-        message: "Failed to delete recipe",
-        severity: "error",
-      });
     }
   };
 
+  /**
+   * Handle user logout
+   */
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
-  };
-
-  const closeSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
   };
 
   return (
@@ -540,8 +528,8 @@ const RecipeList = () => {
                 color="primary"
                 startIcon={<AddIcon />}
                 onClick={handleAdd}
-                fullWidth={isMobile}
-                size={isMobile ? "large" : "medium"}
+                fullWidth={isSmallScreen}
+                size={isSmallScreen ? "large" : "medium"}
                 sx={{
                   borderRadius: 2,
                   textTransform: "none",
@@ -563,8 +551,8 @@ const RecipeList = () => {
                 color="error"
                 startIcon={<LogoutIcon />}
                 onClick={handleLogout}
-                fullWidth={isMobile}
-                size={isMobile ? "large" : "medium"}
+                fullWidth={isSmallScreen}
+                size={isSmallScreen ? "large" : "medium"}
                 sx={{
                   borderRadius: 2,
                   textTransform: "none",
@@ -836,25 +824,27 @@ const RecipeList = () => {
         </Dialog>
 
         {/* Snackbar for notifications */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={4000}
-          onClose={closeSnackbar}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-        >
-          <Alert
-            onClose={closeSnackbar}
-            severity={snackbar.severity}
-            variant="filled"
-            sx={{
-              borderRadius: 2,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              width: "100%",
-            }}
+        {successMessage && (
+          <Snackbar
+            open={true}
+            autoHideDuration={4000}
+            onClose={() => setSuccessMessage("")}
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
           >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
+            <Alert
+              onClose={() => setSuccessMessage("")}
+              severity="success"
+              variant="filled"
+              sx={{
+                borderRadius: 2,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                width: "100%",
+              }}
+            >
+              {successMessage}
+            </Alert>
+          </Snackbar>
+        )}
       </Container>
     </Box>
   );
