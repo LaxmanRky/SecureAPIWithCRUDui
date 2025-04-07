@@ -33,6 +33,9 @@ import {
   Zoom,
   Slide,
   useTheme,
+  useMediaQuery,
+  Skeleton,
+  Snackbar,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -42,11 +45,15 @@ import {
   Restaurant as RestaurantIcon,
   AccessTime as TimeIcon,
   Create as CreateIcon,
+  Star as StarIcon,
+  Sort as SortIcon,
+  FilterList as FilterIcon,
 } from "@mui/icons-material";
 
 // Custom Recipe Card Component
 const RecipeCard = ({ recipe, onEdit, onDelete }) => {
   const theme = useTheme();
+  const [elevation, setElevation] = useState(2);
 
   // Define difficulty color based on level
   const getDifficultyColor = (difficulty) => {
@@ -65,19 +72,21 @@ const RecipeCard = ({ recipe, onEdit, onDelete }) => {
   return (
     <Zoom in={true} style={{ transitionDelay: "50ms" }}>
       <Card
-        elevation={3}
+        elevation={elevation}
+        onMouseOver={() => setElevation(6)}
+        onMouseOut={() => setElevation(2)}
         sx={{
           height: "100%",
+          width: "100%",
           display: "flex",
           flexDirection: "column",
-          transition: "transform 0.3s, box-shadow 0.3s",
+          transition: "transform 0.3s ease, box-shadow 0.3s ease",
           "&:hover": {
-            transform: "translateY(-5px)",
-            boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+            transform: "translateY(-8px)",
           },
           position: "relative",
           overflow: "hidden",
-          borderRadius: 2,
+          borderRadius: 3,
           "&::before": {
             content: '""',
             position: "absolute",
@@ -91,11 +100,27 @@ const RecipeCard = ({ recipe, onEdit, onDelete }) => {
       >
         <Box
           sx={{
-            height: 160,
-            backgroundImage: `url(${recipe.photoLink})`,
+            height: 180,
+            backgroundImage: `url(${
+              recipe.photoLink ||
+              "https://via.placeholder.com/300x180?text=Recipe"
+            })`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             position: "relative",
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(0,0,0,0.15)",
+              transition: "background 0.3s ease",
+            },
+            "&:hover::after": {
+              background: "rgba(0,0,0,0.1)",
+            },
           }}
         >
           <Box
@@ -105,10 +130,11 @@ const RecipeCard = ({ recipe, onEdit, onDelete }) => {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: "rgba(0,0,0,0.2)",
               display: "flex",
               alignItems: "flex-end",
-              padding: 1,
+              justifyContent: "space-between",
+              padding: 1.5,
+              zIndex: 1,
             }}
           >
             <Chip
@@ -118,6 +144,23 @@ const RecipeCard = ({ recipe, onEdit, onDelete }) => {
                 backgroundColor: getDifficultyColor(recipe.difficulty),
                 color: "white",
                 fontWeight: "bold",
+                letterSpacing: "0.5px",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+              }}
+            />
+            <Chip
+              icon={
+                <StarIcon sx={{ color: "white !important", fontSize: 16 }} />
+              }
+              label={
+                recipe.averageRating ? recipe.averageRating.toFixed(1) : "New"
+              }
+              size="small"
+              sx={{
+                backgroundColor: "rgba(0,0,0,0.6)",
+                color: "white",
+                fontWeight: "bold",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
               }}
             />
           </Box>
@@ -128,18 +171,18 @@ const RecipeCard = ({ recipe, onEdit, onDelete }) => {
             flexGrow: 1,
             display: "flex",
             flexDirection: "column",
-            px: 2,
-            py: 2,
-            height: 220,
-            "&:last-child": { pb: 2 },
+            px: 2.5,
+            py: 2.5,
+            height: { xs: "auto", sm: 220 },
+            "&:last-child": { pb: 2.5 },
           }}
         >
           <Typography
             variant="h6"
             component="h2"
             sx={{
-              mb: 1,
-              fontWeight: 600,
+              mb: 1.5,
+              fontWeight: 700,
               lineHeight: 1.2,
               height: "2.4em",
               overflow: "hidden",
@@ -147,74 +190,87 @@ const RecipeCard = ({ recipe, onEdit, onDelete }) => {
               display: "-webkit-box",
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
+              color: theme.palette.text.primary,
             }}
           >
             {recipe.recipeName}
           </Typography>
 
-          <Box sx={{ mb: 1, display: "flex", alignItems: "center" }}>
-            <RestaurantIcon color="action" fontSize="small" sx={{ mr: 0.5 }} />
+          <Box sx={{ mb: 1.5, display: "flex", alignItems: "center" }}>
+            <RestaurantIcon
+              color="action"
+              fontSize="small"
+              sx={{ mr: 0.75, color: theme.palette.grey[600] }}
+            />
             <Typography
               variant="body2"
-              color="text.secondary"
-              noWrap
-              sx={{ maxWidth: "100%" }}
+              sx={{
+                color: theme.palette.text.secondary,
+                fontWeight: 500,
+                noWrap: true,
+                maxWidth: "100%",
+              }}
             >
               {recipe.cuisine}
             </Typography>
           </Box>
 
-          <Box sx={{ mb: 1.5, display: "flex", alignItems: "center" }}>
-            <TimeIcon color="action" fontSize="small" sx={{ mr: 0.5 }} />
-            <Typography variant="body2" color="text.secondary">
+          <Box sx={{ mb: 2, display: "flex", alignItems: "center" }}>
+            <TimeIcon
+              color="action"
+              fontSize="small"
+              sx={{ mr: 0.75, color: theme.palette.grey[600] }}
+            />
+            <Typography
+              variant="body2"
+              sx={{
+                color: theme.palette.text.secondary,
+                fontWeight: 500,
+              }}
+            >
               {recipe.cookingTime} mins
             </Typography>
           </Box>
 
           <Typography
             variant="body2"
-            color="text.secondary"
             sx={{
-              mb: 1.5,
+              mb: 2,
               height: "3em",
               overflow: "hidden",
               textOverflow: "ellipsis",
               display: "-webkit-box",
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
+              color: theme.palette.text.secondary,
+              lineHeight: 1.5,
             }}
           >
             {recipe.description}
           </Typography>
 
           <Box sx={{ mt: "auto" }}>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-              <Rating
-                value={recipe.averageRating || 0}
-                precision={0.5}
-                readOnly
-                size="small"
-              />
-              <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                {recipe.averageRating
-                  ? recipe.averageRating.toFixed(1)
-                  : "No ratings"}
-              </Typography>
-            </Box>
-
             <Box
-              sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mt: 1,
+              }}
             >
               <Tooltip title="Edit Recipe">
                 <IconButton
                   color="primary"
-                  size="small"
+                  size="medium"
                   onClick={() => onEdit(recipe._id)}
                   sx={{
-                    backgroundColor: "rgba(33, 150, 243, 0.08)",
+                    backgroundColor:
+                      theme.palette.primary.lighter ||
+                      "rgba(33, 150, 243, 0.08)",
                     "&:hover": {
-                      backgroundColor: "rgba(33, 150, 243, 0.15)",
+                      backgroundColor: theme.palette.primary.light,
                     },
+                    transition: "all 0.2s ease",
                   }}
                 >
                   <EditIcon fontSize="small" />
@@ -223,13 +279,15 @@ const RecipeCard = ({ recipe, onEdit, onDelete }) => {
               <Tooltip title="Delete Recipe">
                 <IconButton
                   color="error"
-                  size="small"
+                  size="medium"
                   onClick={() => onDelete(recipe._id)}
                   sx={{
-                    backgroundColor: "rgba(244, 67, 54, 0.08)",
+                    backgroundColor:
+                      theme.palette.error.lighter || "rgba(244, 67, 54, 0.08)",
                     "&:hover": {
-                      backgroundColor: "rgba(244, 67, 54, 0.15)",
+                      backgroundColor: theme.palette.error.light,
                     },
+                    transition: "all 0.2s ease",
                   }}
                 >
                   <DeleteIcon fontSize="small" />
@@ -243,13 +301,46 @@ const RecipeCard = ({ recipe, onEdit, onDelete }) => {
   );
 };
 
+// Loading placeholder for recipe cards
+const RecipeCardSkeleton = () => (
+  <Card
+    sx={{
+      height: "100%",
+      width: "100%",
+      display: "flex",
+      flexDirection: "column",
+      borderRadius: 3,
+      overflow: "hidden",
+    }}
+  >
+    <Skeleton variant="rectangular" height={180} />
+    <CardContent sx={{ flexGrow: 1, p: 2.5 }}>
+      <Skeleton variant="text" height={32} width="80%" sx={{ mb: 1 }} />
+      <Skeleton variant="text" height={24} width="60%" sx={{ mb: 1 }} />
+      <Skeleton variant="text" height={24} width="40%" sx={{ mb: 1.5 }} />
+      <Skeleton variant="text" height={24} width="100%" />
+      <Skeleton variant="text" height={24} width="100%" sx={{ mb: 1.5 }} />
+      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+        <Skeleton variant="circular" width={36} height={36} />
+        <Skeleton variant="circular" width={36} height={36} />
+      </Box>
+    </CardContent>
+  </Card>
+);
+
 const RecipeList = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   // Delete confirmation dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -301,11 +392,22 @@ const RecipeList = () => {
       await deleteRecipe(recipeToDelete);
       setDeleteDialogOpen(false);
       setRecipeToDelete(null);
+      // Show success message
+      setSnackbar({
+        open: true,
+        message: "Recipe deleted successfully",
+        severity: "success",
+      });
       // Refresh recipes list
       fetchRecipes();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete recipe");
       setDeleteDialogOpen(false);
+      setSnackbar({
+        open: true,
+        message: "Failed to delete recipe",
+        severity: "error",
+      });
     }
   };
 
@@ -314,12 +416,16 @@ const RecipeList = () => {
     navigate("/login");
   };
 
+  const closeSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   return (
     <Box
       sx={{
         minHeight: "100vh",
-        background: `linear-gradient(to bottom, ${theme.palette.grey[50]}, ${theme.palette.grey[100]})`,
-        pt: 4,
+        background: `linear-gradient(135deg, ${theme.palette.grey[50]}, ${theme.palette.grey[100]})`,
+        pt: { xs: 3, md: 4 },
         pb: 8,
       }}
     >
@@ -328,11 +434,11 @@ const RecipeList = () => {
         <Paper
           elevation={0}
           sx={{
-            p: 3,
-            mb: 4,
-            borderRadius: 2,
+            p: { xs: 2, sm: 3 },
+            mb: { xs: 3, md: 4 },
+            borderRadius: 3,
             backgroundColor: "white",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
             position: "relative",
             overflow: "hidden",
           }}
@@ -354,6 +460,7 @@ const RecipeList = () => {
               justifyContent: "space-between",
               alignItems: "center",
               flexWrap: "wrap",
+              gap: 2,
             }}
           >
             <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -361,34 +468,65 @@ const RecipeList = () => {
                 sx={{
                   bgcolor: theme.palette.primary.main,
                   mr: 2,
-                  width: 50,
-                  height: 50,
+                  width: 56,
+                  height: 56,
+                  boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
                 }}
               >
                 <RestaurantIcon fontSize="large" />
               </Avatar>
               <Box>
-                <Typography variant="h4" component="h1" fontWeight="700">
+                <Typography
+                  variant="h4"
+                  component="h1"
+                  fontWeight="800"
+                  sx={{
+                    fontSize: { xs: "1.75rem", sm: "2.25rem" },
+                    letterSpacing: "-0.01em",
+                  }}
+                >
                   My Recipes
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    mt: 0.5,
+                    fontSize: { xs: "0.875rem", sm: "1rem" },
+                  }}
+                >
                   Manage your collection of delicious recipes
                 </Typography>
               </Box>
             </Box>
 
-            <Box sx={{ display: "flex", gap: 2, mt: { xs: 2, sm: 0 } }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                mt: { xs: 2, sm: 0 },
+                width: { xs: "100%", sm: "auto" },
+              }}
+            >
               <Button
                 variant="contained"
                 color="primary"
                 startIcon={<AddIcon />}
                 onClick={handleAdd}
+                fullWidth={isMobile}
+                size={isMobile ? "large" : "medium"}
                 sx={{
                   borderRadius: 2,
                   textTransform: "none",
-                  px: 2,
+                  px: { xs: 1.5, sm: 2 },
                   py: 1,
                   fontWeight: 600,
+                  boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                  "&:hover": {
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 6px 15px rgba(0,0,0,0.15)",
+                  },
                 }}
               >
                 Add New Recipe
@@ -398,12 +536,15 @@ const RecipeList = () => {
                 color="error"
                 startIcon={<LogoutIcon />}
                 onClick={handleLogout}
+                fullWidth={isMobile}
+                size={isMobile ? "large" : "medium"}
                 sx={{
                   borderRadius: 2,
                   textTransform: "none",
-                  px: 2,
+                  px: { xs: 1.5, sm: 2 },
                   py: 1,
                   fontWeight: 600,
+                  transition: "all 0.2s ease",
                 }}
               >
                 Logout
@@ -412,10 +553,70 @@ const RecipeList = () => {
           </Box>
         </Paper>
 
-        {/* Loading State */}
+        {/* Optional Filter/Sort Controls for Professional UI */}
+        {!loading && !error && recipes.length > 0 && (
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              mb: 3,
+              borderRadius: 3,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              backgroundColor: "white",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {recipes.length} {recipes.length === 1 ? "recipe" : "recipes"}{" "}
+              found
+            </Typography>
+
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Tooltip title="Filter Recipes">
+                <IconButton size="small" color="primary">
+                  <FilterIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Sort Recipes">
+                <IconButton size="small" color="primary">
+                  <SortIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Paper>
+        )}
+
+        {/* Loading State - Skeleton */}
         {loading && (
-          <Box sx={{ display: "flex", justifyContent: "center", my: 8 }}>
-            <CircularProgress />
+          <Box sx={{ pb: 4 }}>
+            <Grid
+              container
+              spacing={3}
+              alignItems="stretch"
+              justifyContent="flex-start"
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+                <Grid
+                  item
+                  xs={12}
+                  sm={6}
+                  md={3}
+                  key={item}
+                  sx={{
+                    display: "flex",
+                    height: "100%",
+                    width: { md: "25%" },
+                    flexBasis: { md: "25%" },
+                    maxWidth: { md: "25%" },
+                    flexGrow: 0,
+                  }}
+                >
+                  <RecipeCardSkeleton />
+                </Grid>
+              ))}
+            </Grid>
           </Box>
         )}
 
@@ -424,7 +625,11 @@ const RecipeList = () => {
           <Alert
             severity="error"
             variant="filled"
-            sx={{ mb: 4, borderRadius: 2 }}
+            sx={{
+              mb: 4,
+              borderRadius: 3,
+              boxShadow: "0 4px 12px rgba(211, 47, 47, 0.2)",
+            }}
           >
             {error}
           </Alert>
@@ -436,25 +641,39 @@ const RecipeList = () => {
             elevation={0}
             sx={{
               p: 5,
-              borderRadius: 2,
+              borderRadius: 3,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+              backgroundColor: "white",
             }}
           >
             <RestaurantIcon
-              sx={{ fontSize: 60, color: "text.secondary", mb: 2 }}
+              sx={{
+                fontSize: 70,
+                color: theme.palette.grey[400],
+                mb: 2,
+                opacity: 0.8,
+              }}
             />
-            <Typography variant="h6" sx={{ mb: 1 }}>
+            <Typography
+              variant="h5"
+              sx={{
+                mb: 1,
+                fontWeight: 600,
+                letterSpacing: "-0.01em",
+              }}
+            >
               No recipes found
             </Typography>
             <Typography
-              variant="body2"
+              variant="body1"
               color="text.secondary"
-              sx={{ mb: 3, textAlign: "center" }}
+              sx={{ mb: 4, textAlign: "center", maxWidth: 450 }}
             >
-              Start your culinary journey by adding your first recipe
+              Start your culinary journey by adding your first recipe. It's easy
+              to get started!
             </Typography>
             <Button
               variant="contained"
@@ -464,8 +683,14 @@ const RecipeList = () => {
                 borderRadius: 2,
                 textTransform: "none",
                 px: 3,
-                py: 1,
+                py: 1.2,
                 fontWeight: 600,
+                boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 6px 15px rgba(0,0,0,0.15)",
+                },
               }}
             >
               Add Your First Recipe
@@ -475,25 +700,66 @@ const RecipeList = () => {
 
         {/* Recipe Grid */}
         {!loading && !error && recipes.length > 0 && (
-          <Grid container spacing={3} alignItems="stretch">
-            {recipes.map((recipe) => (
-              <Grid
-                item
-                xs={12}
-                sm={6}
-                md={4}
-                lg={3}
-                key={recipe._id}
-                sx={{ display: "flex" }}
+          <Box sx={{ pb: 4 }}>
+            <Grid
+              container
+              spacing={3}
+              alignItems="stretch"
+              justifyContent="flex-start"
+              sx={{ mb: 2 }}
+            >
+              {recipes.map((recipe) => (
+                <Grid
+                  item
+                  xs={12}
+                  sm={6}
+                  md={3}
+                  key={recipe._id}
+                  sx={{
+                    display: "flex",
+                    height: "100%",
+                    width: { md: "25%" },
+                    flexBasis: { md: "25%" },
+                    maxWidth: { md: "25%" },
+                    flexGrow: 0,
+                  }}
+                >
+                  <RecipeCard
+                    recipe={recipe}
+                    onEdit={handleEdit}
+                    onDelete={openDeleteDialog}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                mt: 4,
+                pt: 3,
+              }}
+            >
+              <Paper
+                elevation={0}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  px: 3,
+                  py: 1.5,
+                  borderRadius: 3,
+                  backgroundColor: "rgba(255,255,255,0.8)",
+                  backdropFilter: "blur(10px)",
+                }}
               >
-                <RecipeCard
-                  recipe={recipe}
-                  onEdit={handleEdit}
-                  onDelete={openDeleteDialog}
-                />
-              </Grid>
-            ))}
-          </Grid>
+                <Typography variant="body2" color="text.secondary">
+                  Displaying all {recipes.length}{" "}
+                  {recipes.length === 1 ? "recipe" : "recipes"}
+                </Typography>
+              </Paper>
+            </Box>
+          </Box>
         )}
 
         {/* Floating Action Button for Add Recipe */}
@@ -505,7 +771,12 @@ const RecipeList = () => {
               position: "fixed",
               bottom: 32,
               right: 32,
-              boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
+              boxShadow: "0 6px 16px rgba(0,0,0,0.2)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              "&:hover": {
+                transform: "translateY(-4px) scale(1.05)",
+                boxShadow: "0 8px 20px rgba(0,0,0,0.25)",
+              },
             }}
             onClick={handleAdd}
           >
@@ -519,19 +790,30 @@ const RecipeList = () => {
           onClose={closeDeleteDialog}
           PaperProps={{
             sx: {
-              borderRadius: 2,
+              borderRadius: 3,
               p: 1,
+              boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
             },
           }}
         >
-          <DialogTitle sx={{ pb: 1 }}>Confirm Delete</DialogTitle>
-          <DialogContent>
+          <DialogTitle
+            sx={{
+              pb: 1,
+              pt: 2,
+              px: 3,
+            }}
+          >
+            <Typography variant="h6" component="div" fontWeight={600}>
+              Confirm Delete
+            </Typography>
+          </DialogTitle>
+          <DialogContent sx={{ px: 3 }}>
             <Typography variant="body1">
               Are you sure you want to delete this recipe? This action cannot be
               undone.
             </Typography>
           </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 3 }}>
+          <DialogActions sx={{ px: 3, pb: 3, pt: 1 }}>
             <Button
               onClick={closeDeleteDialog}
               variant="outlined"
@@ -539,6 +821,7 @@ const RecipeList = () => {
                 borderRadius: 2,
                 textTransform: "none",
                 fontWeight: 600,
+                px: 3,
               }}
             >
               Cancel
@@ -551,12 +834,35 @@ const RecipeList = () => {
                 borderRadius: 2,
                 textTransform: "none",
                 fontWeight: 600,
+                px: 3,
+                boxShadow: "0 4px 10px rgba(244, 67, 54, 0.2)",
               }}
             >
               Delete
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={4000}
+          onClose={closeSnackbar}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert
+            onClose={closeSnackbar}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{
+              borderRadius: 2,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              width: "100%",
+            }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Container>
     </Box>
   );
