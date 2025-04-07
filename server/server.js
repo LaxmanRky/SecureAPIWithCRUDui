@@ -12,17 +12,40 @@ const cors = require("cors");
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: ["http://localhost:8081", "http://localhost:3000"],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:8081",
+      "http://localhost:3000",
+      "http://localhost:5000",
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
-// MongoDB Connection
+// MongoDB Connection with more detailed options and logging
+console.log("Attempting to connect to MongoDB...");
 mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+  })
+  .then(() => {
+    console.log("Successfully connected to MongoDB");
+    console.log("Database name:", mongoose.connection.name);
+    console.log("Connection state:", mongoose.connection.readyState);
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error details:", {
+      name: err.name,
+      message: err.message,
+      code: err.code,
+      stack: err.stack,
+    });
+    process.exit(1);
+  });
 
 // Routes
 const recipeRoutes = require("./routes/recipeRoutes");
@@ -32,10 +55,17 @@ const authRoutes = require("./routes/authRoutes");
 app.use("/api/recipes", recipeRoutes);
 app.use("/api/auth", authRoutes);
 
-// Error handling middleware
+// Enhanced error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Something went wrong!" });
+  console.error("Error details:", {
+    message: err.message,
+    stack: err.stack,
+    name: err.name,
+  });
+  res.status(500).json({
+    message: "Something went wrong!",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
 });
 
 const PORT = process.env.PORT || 5000;

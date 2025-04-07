@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Container,
   Paper,
@@ -9,27 +9,28 @@ import {
   Box,
   Alert,
   Snackbar,
-} from '@mui/material';
-import { Login as LoginIcon, PersonAdd } from '@mui/icons-material';
-import axios from 'axios';
+} from "@mui/material";
+import { Login as LoginIcon, PersonAdd } from "@mui/icons-material";
+import { login } from "../services/api";
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
   const [formErrors, setFormErrors] = useState({});
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
 
   const validateForm = () => {
     const errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!formData.email) errors.email = 'Email is required';
-    else if (!emailRegex.test(formData.email)) errors.email = 'Invalid email format';
-    if (!formData.password) errors.password = 'Password is required';
+    if (!formData.email) errors.email = "Email is required";
+    else if (!emailRegex.test(formData.email))
+      errors.email = "Invalid email format";
+    if (!formData.password) errors.password = "Password is required";
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -37,19 +38,19 @@ const Login = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     // Clear error when user starts typing
     if (formErrors[name]) {
-      setFormErrors(prev => ({
+      setFormErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
     // Clear general error message
-    if (error) setError('');
+    if (error) setError("");
   };
 
   const handleSubmit = async (e) => {
@@ -57,17 +58,14 @@ const Login = () => {
     if (!validateForm()) return;
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
-        email: formData.email,
-        password: formData.password,
-      });
-      setSuccessMessage('Login successful! Redirecting...');
-      localStorage.setItem('token', response.data.token);
+      const response = await login(formData.email, formData.password);
+      setSuccessMessage("Login successful! Redirecting...");
+      localStorage.setItem("token", response.token);
       setTimeout(() => {
-        navigate('/recipes');
+        navigate("/recipes");
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred');
+      setError(err.response?.data?.message || "An error occurred");
     }
   };
 
@@ -76,12 +74,12 @@ const Login = () => {
       <Box
         sx={{
           marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
         }}
       >
-        <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
+        <Paper elevation={3} sx={{ padding: 4, width: "100%" }}>
           <Typography component="h1" variant="h5" align="center" gutterBottom>
             Login
           </Typography>
@@ -117,7 +115,7 @@ const Login = () => {
               helperText={formErrors.password}
               autoComplete="current-password"
             />
-            <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+            <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
               <Button
                 type="submit"
                 variant="contained"
@@ -129,15 +127,15 @@ const Login = () => {
               <Button
                 variant="outlined"
                 startIcon={<PersonAdd />}
-                onClick={() => navigate('/register')}
+                onClick={() => navigate("/register")}
                 sx={{ flex: 1 }}
               >
                 Register
               </Button>
             </Box>
             <Typography align="center" sx={{ mt: 2 }}>
-              Don't have an account?{' '}
-              <Link to="/register" style={{ textDecoration: 'none' }}>
+              Don't have an account?{" "}
+              <Link to="/register" style={{ textDecoration: "none" }}>
                 Register here
               </Link>
             </Typography>
@@ -147,9 +145,9 @@ const Login = () => {
       <Snackbar
         open={!!successMessage}
         autoHideDuration={2000}
-        onClose={() => setSuccessMessage('')}
+        onClose={() => setSuccessMessage("")}
       >
-        <Alert severity="success" sx={{ width: '100%' }}>
+        <Alert severity="success" sx={{ width: "100%" }}>
           {successMessage}
         </Alert>
       </Snackbar>

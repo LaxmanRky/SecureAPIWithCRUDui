@@ -1,17 +1,17 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = "http://localhost:5000/api";
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Add token to requests if it exists
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -19,17 +19,36 @@ api.interceptors.request.use((config) => {
 });
 
 export const login = async (email, password) => {
-  const response = await api.post('/auth/login', { email, password });
+  const response = await api.post("/auth/login", { email, password });
   return response.data;
 };
 
 export const register = async (username, email, password) => {
-  const response = await api.post('/auth/register', { username, email, password });
-  return response.data;
+  try {
+    console.log("Sending registration request with:", {
+      username,
+      email,
+      password: "***",
+    });
+    const response = await api.post("/auth/register", {
+      username,
+      email,
+      password,
+    });
+    console.log("Registration response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Registration error:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    throw error;
+  }
 };
 
 export const getAllRecipes = async () => {
-  const response = await api.get('/recipes/getAllRecipes');
+  const response = await api.get("/recipes/getAllRecipes");
   return response.data;
 };
 
@@ -39,7 +58,7 @@ export const getRecipeById = async (id) => {
 };
 
 export const createRecipe = async (recipeData) => {
-  const response = await api.post('/recipes/createRecipe', recipeData);
+  const response = await api.post("/recipes/createRecipe", recipeData);
   return response.data;
 };
 

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Container,
   Paper,
@@ -9,32 +9,35 @@ import {
   Box,
   Alert,
   Snackbar,
-} from '@mui/material';
-import { ArrowBack, PersonAdd } from '@mui/icons-material';
-import axios from 'axios';
+} from "@mui/material";
+import { ArrowBack, PersonAdd } from "@mui/icons-material";
+import { register } from "../services/api";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
   const [formErrors, setFormErrors] = useState({});
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
 
   const validateForm = () => {
     const errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!formData.username) errors.username = 'Username is required';
-    if (!formData.email) errors.email = 'Email is required';
-    else if (!emailRegex.test(formData.email)) errors.email = 'Invalid email format';
-    if (!formData.password) errors.password = 'Password is required';
-    else if (formData.password.length < 6) errors.password = 'Password must be at least 6 characters';
-    if (formData.password !== formData.confirmPassword) errors.confirmPassword = 'Passwords do not match';
+    if (!formData.username) errors.username = "Username is required";
+    if (!formData.email) errors.email = "Email is required";
+    else if (!emailRegex.test(formData.email))
+      errors.email = "Invalid email format";
+    if (!formData.password) errors.password = "Password is required";
+    else if (formData.password.length < 6)
+      errors.password = "Password must be at least 6 characters";
+    if (formData.password !== formData.confirmPassword)
+      errors.confirmPassword = "Passwords do not match";
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -42,15 +45,15 @@ const Register = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     // Clear error when user starts typing
     if (formErrors[name]) {
-      setFormErrors(prev => ({
+      setFormErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
@@ -60,18 +63,46 @@ const Register = () => {
     if (!validateForm()) return;
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
+      console.log("Form data being submitted:", {
         username: formData.username,
         email: formData.email,
-        password: formData.password,
+        password: formData.password.length + " characters",
       });
-      setSuccessMessage('Registration successful! Redirecting...');
-      localStorage.setItem('token', response.data.token);
+
+      const response = await register(
+        formData.username,
+        formData.email,
+        formData.password
+      );
+
+      setSuccessMessage("Registration successful! Redirecting...");
+      localStorage.setItem("token", response.token);
       setTimeout(() => {
-        navigate('/recipes');
+        navigate("/recipes");
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred');
+      console.error("Registration error details:", err.response?.data);
+
+      // Handle specific validation errors
+      if (err.response?.data?.errors) {
+        const validationErrors = {};
+        Object.entries(err.response.data.errors).forEach(([field, message]) => {
+          validationErrors[field] = message;
+        });
+        setFormErrors(validationErrors);
+        setError("Please fix the validation errors");
+      } else if (err.response?.data?.field) {
+        // Handle duplicate field errors
+        setFormErrors({
+          [err.response.data
+            .field]: `This ${err.response.data.field} is already taken`,
+        });
+        setError(`This ${err.response.data.field} is already in use`);
+      } else {
+        setError(
+          err.response?.data?.message || "An error occurred during registration"
+        );
+      }
     }
   };
 
@@ -80,12 +111,12 @@ const Register = () => {
       <Box
         sx={{
           marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
         }}
       >
-        <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
+        <Paper elevation={3} sx={{ padding: 4, width: "100%" }}>
           <Typography component="h1" variant="h5" align="center" gutterBottom>
             Register
           </Typography>
@@ -142,10 +173,10 @@ const Register = () => {
               error={!!formErrors.confirmPassword}
               helperText={formErrors.confirmPassword}
             />
-            <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+            <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
               <Button
                 variant="outlined"
-                onClick={() => navigate('/login')}
+                onClick={() => navigate("/login")}
                 startIcon={<ArrowBack />}
                 sx={{ flex: 1 }}
               >
@@ -161,8 +192,8 @@ const Register = () => {
               </Button>
             </Box>
             <Typography align="center" sx={{ mt: 2 }}>
-              Already have an account?{' '}
-              <Link to="/login" style={{ textDecoration: 'none' }}>
+              Already have an account?{" "}
+              <Link to="/login" style={{ textDecoration: "none" }}>
                 Sign in
               </Link>
             </Typography>
@@ -172,9 +203,9 @@ const Register = () => {
       <Snackbar
         open={!!successMessage}
         autoHideDuration={2000}
-        onClose={() => setSuccessMessage('')}
+        onClose={() => setSuccessMessage("")}
       >
-        <Alert severity="success" sx={{ width: '100%' }}>
+        <Alert severity="success" sx={{ width: "100%" }}>
           {successMessage}
         </Alert>
       </Snackbar>
