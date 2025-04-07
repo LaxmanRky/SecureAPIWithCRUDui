@@ -46,8 +46,6 @@ import {
   AccessTime as TimeIcon,
   Create as CreateIcon,
   Star as StarIcon,
-  Sort as SortIcon,
-  FilterList as FilterIcon,
 } from "@mui/icons-material";
 
 // Custom Recipe Card Component
@@ -552,41 +550,6 @@ const RecipeList = () => {
             </Box>
           </Box>
         </Paper>
-
-        {/* Optional Filter/Sort Controls for Professional UI */}
-        {!loading && !error && recipes.length > 0 && (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              mb: 3,
-              borderRadius: 3,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              backgroundColor: "white",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              {recipes.length} {recipes.length === 1 ? "recipe" : "recipes"}{" "}
-              found
-            </Typography>
-
-            <Box sx={{ display: "flex", gap: 1 }}>
-              <Tooltip title="Filter Recipes">
-                <IconButton size="small" color="primary">
-                  <FilterIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Sort Recipes">
-                <IconButton size="small" color="primary">
-                  <SortIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Paper>
-        )}
 
         {/* Loading State - Skeleton */}
         {loading && (
