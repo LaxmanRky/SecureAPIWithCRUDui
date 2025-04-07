@@ -100,7 +100,6 @@ const AddEditRecipe = () => {
     recipeName: "",
     description: "",
     ingredients: [],
-    instructions: [],
     cookingTime: "",
     difficulty: "",
     cuisine: "",
@@ -117,6 +116,15 @@ const AddEditRecipe = () => {
     }
   }, [id]);
 
+  // Restore the useEffect for preview URL
+  useEffect(() => {
+    if (recipe.photoLink) {
+      setPreviewUrl(recipe.photoLink);
+    } else {
+      setPreviewUrl("");
+    }
+  }, [recipe.photoLink]);
+
   const fetchRecipe = async () => {
     try {
       setLoading(true);
@@ -128,6 +136,7 @@ const AddEditRecipe = () => {
         }
       );
       setRecipe(response.data);
+      setPreviewUrl(response.data.photoLink);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch recipe");
     } finally {
@@ -141,8 +150,6 @@ const AddEditRecipe = () => {
     if (!recipe.description) errors.description = "Description is required";
     if (!recipe.ingredients || recipe.ingredients.length === 0)
       errors.ingredients = "At least one ingredient is required";
-    if (!recipe.instructions || recipe.instructions.length === 0)
-      errors.instructions = "At least one instruction step is required";
     if (!recipe.cookingTime) errors.cookingTime = "Cooking time is required";
     if (!recipe.difficulty) errors.difficulty = "Difficulty level is required";
     if (!recipe.cuisine) errors.cuisine = "Cuisine is required";
@@ -154,7 +161,7 @@ const AddEditRecipe = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "ingredients" || name === "instructions") {
+    if (name === "ingredients") {
       // Split text by new lines and filter out empty lines
       const items = value.split("\n").filter((item) => item.trim() !== "");
       setRecipe((prev) => ({
@@ -184,33 +191,22 @@ const AddEditRecipe = () => {
       let newText;
       let numberMatch = null;
 
-      // Handle both instructions and ingredients with numbering
+      // Handle ingredients with numbering
       const lines = textBeforeCursor.split("\n");
       const lastLine = lines[lines.length - 1];
 
-      // Extract the number from the last line if it exists (works for both formats: "1." or "1 ")
+      // Extract the number from the last line if it exists
       numberMatch = lastLine.match(/^(\d+)[\.\s]/);
 
       if (numberMatch) {
         // If last line has a number, increment it for the new line
         const lastNumber = parseInt(numberMatch[1]);
         const nextNumber = lastNumber + 1;
-        // Use different formatting based on field type
-        if (fieldName === "instructions") {
-          newText =
-            textBeforeCursor + "\n" + nextNumber + ". " + textAfterCursor;
-        } else {
-          // For ingredients, use a space instead of a period
-          newText =
-            textBeforeCursor + "\n" + nextNumber + " " + textAfterCursor;
-        }
+        // For ingredients, use a space instead of a period
+        newText = textBeforeCursor + "\n" + nextNumber + " " + textAfterCursor;
       } else {
         // If no numbered lines yet, start with 1
-        if (fieldName === "instructions") {
-          newText = textBeforeCursor + "\n1. " + textAfterCursor;
-        } else {
-          newText = textBeforeCursor + "\n1 " + textAfterCursor;
-        }
+        newText = textBeforeCursor + "\n1 " + textAfterCursor;
       }
 
       // Update the field value
@@ -225,15 +221,7 @@ const AddEditRecipe = () => {
 
       // Set cursor position after the auto-added text
       setTimeout(() => {
-        const newPosition =
-          cursorPosition +
-          (numberMatch
-            ? fieldName === "instructions"
-              ? 4
-              : 3 // "X. " vs "X "
-            : fieldName === "instructions"
-            ? 3
-            : 2); // "1. " vs "1 "
+        const newPosition = cursorPosition + (numberMatch ? 3 : 2); // "X " or "1 "
 
         const textarea = document.querySelector(
           `textarea[name="${fieldName}"]`
@@ -595,11 +583,11 @@ const AddEditRecipe = () => {
                   fontSize: 26,
                 }}
               />
-              Ingredients & Instructions
+              Ingredients
             </Typography>
 
             <Grid container spacing={3} alignItems="stretch">
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12}>
                 <TextField
                   required
                   fullWidth
@@ -624,10 +612,8 @@ const AddEditRecipe = () => {
                   variant="outlined"
                   size="medium"
                   sx={{
-                    height: "100%",
                     "& .MuiOutlinedInput-root": {
                       borderRadius: 2,
-                      height: "100%",
                       boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
                       transition: "all 0.2s ease",
                       "&:hover": {
@@ -651,64 +637,6 @@ const AddEditRecipe = () => {
                         <ListAltIcon color="primary" />
                       </InputAdornment>
                     ),
-                    sx: { height: "100%" },
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  required
-                  fullWidth
-                  multiline
-                  rows={10}
-                  label="Instructions (numbered steps)"
-                  name="instructions"
-                  value={recipe.instructions.join("\n")}
-                  onChange={handleChange}
-                  onKeyDown={(e) => handleKeyDown(e, "instructions")}
-                  error={!!formErrors.instructions}
-                  helperText={
-                    formErrors.instructions ||
-                    "Press Enter to add a new numbered step automatically"
-                  }
-                  placeholder="1. Preheat oven to 350°F (175°C)
-2. Mix flour, sugar, and salt in a large bowl
-3. Add eggs and vanilla, stir until combined
-4. Fold in melted butter until smooth
-5. Pour batter into prepared pan
-6. Bake for 25-30 minutes or until golden"
-                  variant="outlined"
-                  size="medium"
-                  sx={{
-                    height: "100%",
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                      height: "100%",
-                      boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
-                      transition: "all 0.2s ease",
-                      "&:hover": {
-                        boxShadow: "0 3px 8px rgba(0,0,0,0.12)",
-                      },
-                      "&.Mui-focused": {
-                        boxShadow: "0 0 0 3px rgba(25, 118, 210, 0.15)",
-                      },
-                    },
-                    "& .MuiInputBase-input": {
-                      fontFamily: "monospace",
-                      fontSize: "0.95rem",
-                    },
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment
-                        position="start"
-                        sx={{ alignSelf: "flex-start", mt: 1.5 }}
-                      >
-                        <ListAltIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                    sx: { height: "100%" },
                   }}
                 />
               </Grid>
@@ -935,6 +863,40 @@ const AddEditRecipe = () => {
                   }}
                 />
               </Grid>
+
+              {previewUrl && (
+                <Grid item xs={12} sx={{ mt: 2 }}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 0,
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      border: "1px solid rgba(0,0,0,0.1)",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        p: 2,
+                        fontWeight: 600,
+                        borderBottom: "1px solid rgba(0,0,0,0.08)",
+                      }}
+                    >
+                      Image Preview
+                    </Typography>
+                    <Box
+                      sx={{
+                        height: 260,
+                        backgroundImage: `url(${previewUrl})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                    />
+                  </Paper>
+                </Grid>
+              )}
             </Grid>
 
             <Box
